@@ -1,0 +1,97 @@
+{
+  "name": "القرآن الكريم مباشر",
+  "short_name": "القرآن مباشر",
+  "description": "إذاعات القرآن الكريم، الأذكار، السبحة ومواقيت الصلاة في تطبيق PWA سريع وحديث.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": [
+    "window-controls-overlay",
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "portrait",
+  "background_color": "#0a1211",
+  "theme_color": "#0a1211",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": [
+    "music",
+    "lifestyle",
+    "education"
+  ],
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icon-180.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "إذاعة مكة المكرمة",
+      "short_name": "مكة",
+      "url": "./index.html?s=ksa",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "أذكار الصباح",
+      "short_name": "الصباح",
+      "url": "./index.html#azCard",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "مواقيت الصلاة",
+      "short_name": "الصلاة",
+      "url": "./index.html#prayerSection",
+      "icons": [
+        {
+          "src": "icon.svg",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "id": "./"
+}

@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" data-theme="dark">
+<head>
+<meta charset="UTF-8"/>
+<!-- viewport: maximum-scale=5 للوصول، viewport-fit=cover للشاشات المنحنية -->
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=5.0,viewport-fit=cover"/>
+<meta name="theme-color" content="#0a1211" id="themeColorMeta"/>
+<script>
+  (() => {
+    try {
+      const saved = localStorage.getItem('qr_theme');
+      if (saved === 'light' || saved === 'dark') document.documentElement.setAttribute('data-theme', saved);
+    } catch (_) {}
+  })();
+</script>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="description" content="القرآن الكريم مباشر — بث مباشر لإذاعات القرآن الكريم وأشهر القراء، مع أذكار الصباح والمساء والسبحة الرقمية والتقويم الهجري"/>
+<title>القرآن الكريم مباشر</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" type="image/svg+xml" href="icon.svg"/>
+<link rel="apple-touch-icon" href="icon-180.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+
+<!-- HLS.js + Adhan: v25 — defer بدل التحميل الحاجب؛ آمن لأن app.js يتحقق من typeof Hls/adhan دفاعيًا ولا يستخدمهما إلا بعد تفاعل المستخدم أو DOMContentLoaded -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js" defer onerror="window.__hlsLoadFailed=true"></script>
+<script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js" defer onerror="window.__adhanLoadFailed=true"></script>
+
+<!-- v25: ملف CSS واحد مدمج بدل 4 ملفات منفصلة (نفس ترتيب الـ cascade الأصلي، بدون أي تغيير بصري) -->
+<link rel="stylesheet" href="css/styles.min.css"/>
+<script src="js/pwa-install.js" defer></script>
+</head>
+<body>
+
+<a href="#npCard" class="skip-link">تخطي إلى المشغّل</a>
+
+<!-- خلفية هندسية -->
+<div class="geo" aria-hidden="true">
+  <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+    <defs>
+      <linearGradient id="tbG" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stop-color="#a87820"/>
+        <stop offset="40%" stop-color="#d4af37"/>
+        <stop offset="75%" stop-color="#ecc95a"/>
+        <stop offset="100%" stop-color="#f5df8c"/>
+      </linearGradient>
+    </defs>
+    <path d="M0 400 Q300 100 600 400 T1200 400" stroke="rgba(212,175,55,0.035)" fill="none" stroke-width="1.5"/>
+    <path d="M0 500 Q400 200 800 500 T1200 500" stroke="rgba(212,175,55,0.025)" fill="none" stroke-width="1"/>
+    <line x1="0" y1="0" x2="1200" y2="800" stroke="rgba(212,175,55,0.015)" stroke-width="1"/>
+    <line x1="1200" y1="0" x2="0" y2="800" stroke="rgba(212,175,55,0.015)" stroke-width="1"/>
+  </svg>
+</div>
+
+<!-- Tasbih flash -->
+<div class="tb-flash" id="tbFlash" role="status" aria-live="polite" aria-atomic="true">
+  <div class="tb-flash-msg" id="tbFlashMsg"></div>
+</div>
+
+<!-- Focus mode -->
+<div id="fdiv" class="fdiv hidden" role="dialog" aria-label="وضع التركيز" aria-modal="true">
+  <div class="fbody">
+    <div class="frings" aria-hidden="true">
+      <div class="fr fr--1"></div><div class="fr fr--2"></div><div class="fr fr--3"></div>
+      <div class="frc"><span class="bism">بسم الله<br>الرحمن الرحيم</span></div>
+    </div>
+    <p class="ftit">القرآن الكريم مباشر</p>
+    <p class="fst" id="fst">متوقف</p>
+    <button class="pbtn" id="fpbtn" aria-label="تشغيل وإيقاف البث">
+      <div class="bsh" aria-hidden="true"></div>
+      <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      <svg class="i-pause hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+    </button>
+  </div>
+  <button class="fexit" id="fexit" aria-label="خروج من وضع التركيز">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+      <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
+    </svg>
+  </button>
+</div>
+
+<div class="wrap" role="main">
+
+  <!-- Header -->
+  <header class="hdr" role="banner">
+    <div class="logo">
+      <div class="logo-ic" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none">
+          <path d="M2 5.5C2 4.67 2.67 4 3.5 4H10a2 2 0 0 1 2 2v14a2 2 0 0 0-2-2H3.5A1.5 1.5 0 0 1 2 16.5v-11z" fill="rgba(212,175,55,0.25)" stroke="var(--gold)" stroke-width="1.4" stroke-linejoin="round"/>
+          <path d="M22 5.5c0-.83-.67-1.5-1.5-1.5H14a2 2 0 0 0-2 2v14a2 2 0 0 1 2-2h6.5a1.5 1.5 0 0 0 1.5-1.5v-11z" fill="rgba(212,175,55,0.25)" stroke="var(--gold)" stroke-width="1.4" stroke-linejoin="round"/>
+        </svg>
+      </div>
+      <span>القرآن الكريم مباشر</span>
+    </div>
+    <nav class="hdr-acts" aria-label="أدوات التطبيق">
+      <button class="ibtn" id="batterybtn" aria-label="وضع توفير الطاقة" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><rect x="2" y="7" width="16" height="10" rx="2"/><path d="M22 11v2"/><line x1="6" y1="12" x2="10" y2="8"/><line x1="10" y1="8" x2="10" y2="12"/><line x1="10" y1="12" x2="14" y2="12"/></svg>
+      </button>
+      <button class="ibtn" id="sharebtn" aria-label="مشاركة التطبيق">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="ibtn" id="focusbtn" aria-label="وضع التركيز الكامل">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+      <button class="ibtn" id="thbtn" aria-label="تغيير المظهر">
+        <svg class="i-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        <svg class="i-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+      </button>
+    </nav>
+  </header>
+
+  <!-- Modern Home Hero — v18 UI layer -->
+  <section class="home-hero" id="homeHero" aria-label="الرئيسية">
+    <div class="hero-topline">
+      <span class="hero-brand">القرآن الكريم</span>
+      <span class="hero-live"><i></i> بث مباشر</span>
+    </div>
+    <div class="hero-copy">
+      <p class="hero-kicker">استمع أينما كنت</p>
+      <h1>سكينةٌ في كل لحظة</h1>
+      <p>إذاعات القرآن الكريم، مواقيت الصلاة والأذكار في تطبيق واحد.</p>
+    </div>
+    <div class="hero-actions">
+      <a class="hero-primary" href="#npCard">
+        <span class="hero-play-icon" aria-hidden="true">▶</span>
+        استمع الآن
+      </a>
+      <a class="hero-secondary" href="#stationsCard">استكشف الإذاعات</a>
+    </div>
+    <div class="hero-glow" aria-hidden="true"></div>
+  </section>
+
+  <!-- Calendar -->
+  <section class="cal-card" aria-label="التقويم">
+    <div class="cal-block">
+      <span class="cal-label">الهجري</span>
+      <span class="cal-hijri" id="calHijri" aria-live="polite">جاري التحميل...</span>
+    </div>
+    <div class="cal-divider" role="separator" aria-hidden="true"></div>
+    <div class="cal-block">
+      <span class="cal-label">الميلادي</span>
+      <span class="cal-greg" id="calGreg">—</span>
+    </div>
+    <div class="cal-divider" role="separator" aria-hidden="true"></div>
+    <div class="cal-block cal-block--center">
+      <span class="cal-label">اليوم</span>
+      <span class="cal-day" id="calDay">—</span>
+    </div>
+  </section>
+
+  <!-- Now Playing -->
+  <section class="card np-card" id="npCard" aria-label="البث المباشر">
+    <div class="np-slab" id="npSlab">
+      <span class="ldot" aria-hidden="true"></span>
+      <span id="npStation">اختر إذاعة</span>
+    </div>
+    <div>
+      <h1 class="np-title" id="npTitle">القرآن الكريم مباشر</h1>
+      <p class="np-sub">بث مباشر · ٢٤ ساعة</p>
+    </div>
+    <div class="vwrap" aria-hidden="true">
+      <div class="viz" id="viz" aria-hidden="true">
+        <div class="vb" style="--h:.28;--d:0s"></div><div class="vb" style="--h:.52;--d:.09s"></div>
+        <div class="vb" style="--h:.78;--d:.15s"></div><div class="vb" style="--h:1.0;--d:.04s"></div>
+        <div class="vb" style="--h:.68;--d:.19s"></div><div class="vb" style="--h:.88;--d:.11s"></div>
+        <div class="vb" style="--h:1.0;--d:.07s"></div><div class="vb" style="--h:.82;--d:.16s"></div>
+        <div class="vb" style="--h:.62;--d:.08s"></div><div class="vb" style="--h:.78;--d:.13s"></div>
+        <div class="vb" style="--h:.48;--d:.21s"></div><div class="vb" style="--h:.32;--d:.05s"></div>
+        <div class="vb" style="--h:.18;--d:.17s"></div>
+      </div>
+      <!-- علامة البث: أقواس صوتية تنبض أثناء الاتصال -->
+      <div class="spwrap hidden" id="spwrap">
+        <div class="stream-icon" aria-hidden="true">
+          <svg class="stream-svg" viewBox="0 0 56 56" fill="none">
+            <circle class="s-dot" cx="28" cy="28" r="4" fill="var(--gold)"/>
+            <path class="s-arc s-arc-1" d="M18 28 a10 10 0 0 1 10-10" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"/>
+            <path class="s-arc s-arc-1" d="M38 28 a10 10 0 0 0-10-10" stroke="var(--gold)" stroke-width="2.5" stroke-linecap="round"/>
+            <path class="s-arc s-arc-2" d="M11 28 a17 17 0 0 1 17-17" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+            <path class="s-arc s-arc-2" d="M45 28 a17 17 0 0 0-17-17" stroke="var(--gold)" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+            <path class="s-arc s-arc-3" d="M4.5 28 a23.5 23.5 0 0 1 23.5-23.5" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+            <path class="s-arc s-arc-3" d="M51.5 28 a23.5 23.5 0 0 0-23.5-23.5" stroke="var(--gold)" stroke-width="1.5" stroke-linecap="round" opacity="0.4"/>
+          </svg>
+        </div>
+        <span class="sptxt">جارٍ الاتصال...</span>
+      </div>
+      <div class="ewrap hidden" id="ewrap">
+        <span class="eic" aria-hidden="true">⚠</span>
+        <p class="emsg" id="emsg">تعذّر الاتصال</p>
+        <button class="rbtn" id="rbtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.13"/></svg>
+          إعادة المحاولة
+        </button>
+      </div>
+    </div>
+    <div class="np-controls">
+      <div class="strow" id="strow" role="status" aria-live="polite">
+        <span id="sttxt">متوقف</span>
+      </div>
+      <button class="pbtn" id="pbtn" aria-label="تشغيل وإيقاف البث">
+        <div class="bsh" aria-hidden="true"></div>
+        <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        <svg class="i-pause hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+      </button>
+    </div>
+    <div class="vrow" id="vrow">
+      <button class="ibtn vic" id="mutebtn" aria-label="كتم الصوت" aria-pressed="false">
+        <svg class="i-vh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <svg class="i-vl hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+        <svg class="i-vm hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+      </button>
+      <div class="vtrack">
+        <input class="vslider" id="vslider" type="range" min="0" max="100" step="1" value="80" aria-label="مستوى الصوت" dir="ltr"/>
+      </div>
+      <span class="vpct" id="vpct" aria-hidden="true">٨٠٪</span>
+    </div>
+  </section>
+
+  <!-- Stations -->
+  <section class="card sec-card" id="stationsCard" aria-label="الإذاعات المتاحة">
+    <div class="sec-header">
+      <h2 class="sec-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        الإذاعات
+      </h2>
+      <div class="cat-pills" id="catPills" role="tablist" aria-label="تصفية الإذاعات"></div>
+    </div>
+    <div class="st-search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="stSearch" class="st-search-input" placeholder="ابحث عن إذاعة أو قارئ..." aria-label="البحث في الإذاعات" autocomplete="off"/>
+    </div>
+    <div class="st-list" id="stList" role="list"></div>
+  </section>
+
+  <!-- التلاوات: قراء وسور عند الطلب (مصدر منفصل عن البث المباشر) -->
+  <section class="card sec-card" id="reciteCard" aria-label="التلاوات">
+    <div class="sec-header">
+      <h2 class="sec-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.2c-1.5-1.4-3.6-2.2-6-2.2-1 0-2 .13-3 .4v14.4c1-.27 2-.4 3-.4 2.4 0 4.5.8 6 2.2"/><path d="M12 6.2c1.5-1.4 3.6-2.2 6-2.2 1 0 2 .13 3 .4v14.4c-1-.27-2-.4-3-.4-2.4 0-4.5.8-6 2.2"/><path d="M12 6.2v14.4"/><path d="M8.6 9.3c1.1.4 2.3.4 3.4 0M8.6 12.7c1.1.4 2.3.4 3.4 0"/></svg>
+        التلاوات
+      </h2>
+    </div>
+
+    <!-- مشغل السورة الحالية -->
+    <div class="rc-player hidden" id="rcPlayer">
+      <div class="rc-np">
+        <div class="rc-np-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v23H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+        </div>
+        <div class="rc-np-meta">
+          <div class="rc-np-title" id="rcSurahTitle">—</div>
+          <div class="rc-np-sub" id="rcReciterName">—</div>
+        </div>
+      </div>
+      <div class="rc-seekrow">
+        <span class="rc-time" id="rcCurTime">٠:٠٠</span>
+        <input type="range" class="rc-seek" id="rcSeek" min="0" max="100" value="0" step="0.1" dir="ltr" aria-label="موضع التشغيل"/>
+        <span class="rc-time" id="rcDurTime">٠:٠٠</span>
+      </div>
+      <div class="rc-controls">
+        <button class="ibtn" id="rcNextBtn" aria-label="السورة التالية" title="السورة التالية">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="6 4 6 20 16 12 6 4"/><rect x="17" y="4" width="2" height="16"/></svg>
+        </button>
+        <button class="pbtn" id="rcPlayBtn" aria-label="تشغيل / إيقاف التلاوة" title="تشغيل / إيقاف">
+          <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <svg class="i-pause hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+        </button>
+        <button class="ibtn" id="rcPrevBtn" aria-label="السورة السابقة" title="السورة السابقة">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="18 4 18 20 8 12 18 4"/><rect x="5" y="4" width="2" height="16"/></svg>
+        </button>
+        <button class="ibtn" id="rcRepeatBtn" aria-label="وضع التكرار" title="تكرار: إيقاف">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+        </button>
+        <a class="ibtn" id="rcDownloadBtn" href="#" target="_blank" rel="noopener" download aria-label="تحميل السورة" title="تحميل">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M5 21h14"/></svg>
+        </a>
+        <button class="ibtn" id="rcOfflineBtn" aria-label="حفظ للاستماع بدون اتصال" aria-pressed="false" title="حفظ للاستماع بدون اتصال">
+          <svg class="i-offline-save" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          <svg class="i-offline-saved hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="9 14 11 16 16 11"/></svg>
+        </button>
+      </div>
+      <div class="vrow" id="rcVrow">
+        <button class="ibtn" id="rcMuteBtn" aria-label="كتم صوت التلاوة" aria-pressed="false">
+          <svg class="i-vh" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+          <svg class="i-vm hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg>
+        </button>
+        <div class="vtrack">
+          <input class="vslider" id="rcVolume" type="range" min="0" max="100" step="1" value="100" aria-label="مستوى صوت التلاوة" dir="ltr"/>
+        </div>
+        <span class="vpct" id="rcVpct" aria-hidden="true">١٠٠٪</span>
+      </div>
+      <div class="rc-status" id="rcStatus" aria-live="polite"></div>
+    </div>
+
+    <!-- الروايات -->
+    <div class="cat-pills" id="rcRiwayatPills" role="tablist" aria-label="اختيار الرواية"></div>
+
+    <!-- تصفح القرّاء -->
+    <div id="rcBrowseView">
+      <div class="st-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="rcReciterSearch" class="st-search-input" placeholder="ابحث عن قارئ..." aria-label="البحث عن قارئ" autocomplete="off"/>
+      </div>
+      <div class="st-list" id="rcRecitersList" role="list"></div>
+    </div>
+
+    <!-- تصفح السور -->
+    <div id="rcSurahsView" class="hidden">
+      <div class="rc-surahs-header">
+        <button class="ibtn" id="rcBackBtn" aria-label="رجوع لقائمة القرّاء" title="رجوع">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><polyline points="9 18 15 12 9 6" transform="rotate(180 12 12)"/></svg>
+        </button>
+        <div class="rc-surahs-reciter" id="rcSurahsReciterName">—</div>
+      </div>
+      <div class="st-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="search" id="rcSurahSearch" class="st-search-input" placeholder="ابحث عن سورة..." aria-label="البحث عن سورة" autocomplete="off"/>
+      </div>
+      <div class="st-list" id="rcSurahsList" role="list"></div>
+    </div>
+  </section>
+
+  <!-- Tasbih — fixed to 99 -->
+  <section class="card tb-card" id="tbCard" aria-label="السبحة الرقمية">
+    <div class="tb-header">
+      <h2 class="tb-title">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="4" r="1.4" fill="currentColor" stroke="none"/><circle cx="18.4" cy="7.6" r="1.2" fill="currentColor" stroke="none"/><circle cx="20" cy="14" r="1.2" fill="currentColor" stroke="none"/><circle cx="16.4" cy="19.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="7.6" cy="19.4" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="14" r="1.2" fill="currentColor" stroke="none"/><circle cx="5.6" cy="7.6" r="1.2" fill="currentColor" stroke="none"/></svg>
+        السبحة الرقمية
+      </h2>
+      <button class="tb-target-badge" id="tbTargetBtn" type="button" aria-label="تغيير الهدف — الهدف الحالي ٩٩ تسبيحة">
+        <span id="tbTargetNum">٩٩</span>
+        <svg class="tb-target-cycle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
+      </button>
+    </div>
+    <div class="tb-ring" id="tbRing" role="button" aria-label="زر التسبيح" tabindex="0">
+      <svg class="tb-svg" viewBox="0 0 200 200" aria-hidden="true">
+        <circle class="tb-track-inner" cx="100" cy="100" r="82"/>
+        <circle class="tb-track" cx="100" cy="100" r="82"/>
+        <circle class="tb-arc" id="tbArc" cx="100" cy="100" r="82"/>
+      </svg>
+      <div class="tb-center" aria-hidden="true">
+        <span class="tb-num" id="tbNum">٠</span>
+        <span class="tb-lbl">تسبيحة</span>
+        <span class="tb-mile" id="tbMile" aria-live="polite"></span>
+      </div>
+      <button class="tb-tap" id="tbTap" aria-hidden="true" tabindex="-1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M18 11V6a2 2 0 0 0-4 0v0"/><path d="M14 10V4a2 2 0 0 0-4 0v2"/><path d="M10 10.5V6a2 2 0 0 0-4 0v8"/><path d="M18 8a2 2 1 0 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/></svg>
+      </button>
+    </div>
+    <div class="tb-bar">
+      <div class="tb-progress" role="progressbar" aria-label="تقدم السبحة" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+        <div class="tb-fill" id="tbFill" style="width:0%"></div>
+      </div>
+      <button class="tb-rst" id="tbRst" aria-label="إعادة تعيين السبحة">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.13"/></svg>
+        إعادة
+      </button>
+    </div>
+  </section>
+
+  <!-- Azkar -->
+  <section class="card azcard" id="azCard" aria-label="أذكار الصباح والمساء">
+    <h2 class="az-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+      الأذكار
+    </h2>
+    <details id="detMorning">
+      <summary>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/></svg>
+        أذكار الصباح <span class="sum-arrow" aria-hidden="true">▾</span>
+      </summary>
+      <div class="zlist" id="ml"></div>
+    </details>
+    <details id="detEvening">
+      <summary>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+        أذكار المساء <span class="sum-arrow" aria-hidden="true">▾</span>
+      </summary>
+      <div class="zlist" id="el"></div>
+    </details>
+  </section>
+
+  <!-- Prayer Times -->
+  <div id="prayerSection" class="card pt-section">
+    <div class="pt-section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      مواقيت الصلاة
+    </div>
+    <div class="pt-skeleton" aria-busy="true">
+      <div class="pt-sk-header"><div class="pt-sk-bar w60 pulse"></div><div class="pt-sk-bar w30 pulse"></div></div>
+      <div class="pt-sk-next pulse"></div>
+      <div class="pt-sk-grid">
+        <div class="pt-sk-cell pulse"></div><div class="pt-sk-cell pulse"></div>
+        <div class="pt-sk-cell pulse"></div><div class="pt-sk-cell pulse"></div>
+        <div class="pt-sk-cell pulse"></div><div class="pt-sk-cell pulse"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="ftr" role="contentinfo">
+    <div class="ftr-status" id="ftrStatus" role="status" aria-live="polite">
+      <span class="ftr-dot" aria-hidden="true"></span>
+      <span id="ftrMsg">—</span>
+    </div>
+    <p>تم التطوير بواسطة <a class="flink" href="https://www.linkedin.com/in/k5aloood" target="_blank" rel="noopener noreferrer" aria-label="خالد سامح على LinkedIn">خالد سامح</a> · <span class="ftr-ver">نسخة ٥.٠</span></p>
+  </footer>
+
+</div>
+
+<!-- Bottom Navigation -->
+<nav class="bnav" id="bnav" aria-label="التنقل الرئيسي">
+  <a href="#npCard" class="bnav-item active" data-target="npCard" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+    <span>الرئيسية</span>
+  </a>
+  <a href="#stationsCard" class="bnav-item" data-target="stationsCard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+    <span>الإذاعات</span>
+  </a>
+  <a href="#reciteCard" class="bnav-item" data-target="reciteCard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.2c-1.5-1.4-3.6-2.2-6-2.2-1 0-2 .13-3 .4v14.4c1-.27 2-.4 3-.4 2.4 0 4.5.8 6 2.2"/><path d="M12 6.2c1.5-1.4 3.6-2.2 6-2.2 1 0 2 .13 3 .4v14.4c-1-.27-2-.4-3-.4-2.4 0-4.5.8-6 2.2"/><path d="M12 6.2v14.4"/><path d="M8.6 9.3c1.1.4 2.3.4 3.4 0M8.6 12.7c1.1.4 2.3.4 3.4 0"/></svg>
+    <span>التلاوات</span>
+  </a>
+  <a href="#azCard" class="bnav-item" data-target="azCard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v23H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <span>الأذكار</span>
+  </a>
+  <a href="#tbCard" class="bnav-item" data-target="tbCard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>
+    <span>السبحة</span>
+  </a>
+  <a href="#prayerSection" class="bnav-item" data-target="prayerSection">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v4"/><path d="M5 12H3"/><path d="M21 12h-2"/><path d="M6.34 6.34 4.93 4.93"/><path d="M19.07 4.93 17.66 6.34"/><path d="M12 20a8 8 0 0 0 8-8H4a8 8 0 0 0 8 8z"/></svg>
+    <span>الصلاة</span>
+  </a>
+</nav>
+
+<!-- Mini Player -->
+<div class="mini" id="mini" role="complementary" aria-label="مشغل الصوت">
+  <div class="minfo">
+    <div class="mic" id="miniIco" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--gold)" stroke-width="1.5"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><circle cx="12" cy="12" r="3" fill="var(--gold)" stroke="none"/></svg>
+    </div>
+    <div class="mtxt">
+      <span class="mt" id="miniTitle">القرآن الكريم مباشر</span>
+      <span class="ms" id="miniSt" aria-live="polite">متوقف</span>
+    </div>
+  </div>
+  <button class="mbtn" id="mbtn" aria-label="تشغيل وإيقاف البث">
+    <svg class="i-play" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+    <svg class="i-pause hidden" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+  </button>
+</div>
+
+<!-- Audio — v6 exact: قبل app.js مباشرة -->
+<audio id="audioEl" preload="none" playsinline webkit-playsinline aria-hidden="true"></audio>
+<!-- Audio التلاوات — منفصل عن مشغل الإذاعة الحي عمدًا (مصدر عند الطلب له مدة وseek خاصين به) -->
+<audio id="reciteAudio" preload="none" playsinline webkit-playsinline aria-hidden="true"></audio>
+
+<!-- Service Worker -->
+<script>
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('./sw.js').then(function(reg){
+      reg.addEventListener('updatefound',function(){
+        var w=reg.installing;
+        w.addEventListener('statechange',function(){
+          if(w.state==='installed'&&navigator.serviceWorker.controller)showPWAUpdateToast(w);
+        });
+      });
+    }).catch(function(){});
+  });
+  var refreshing=false;
+  navigator.serviceWorker.addEventListener('controllerchange',function(){if(!refreshing){refreshing=true;window.location.reload();}});
+}
+function showPWAUpdateToast(worker){
+  var old=document.getElementById('pwaUpdateToast');if(old)old.remove();
+  var t=document.createElement('div');t.id='pwaUpdateToast';t.className='pwa-update-toast';
+  t.innerHTML='<div class="pwa-update-inner"><span class="pwa-update-txt">🆕 يتوفر إصدار جديد</span><button class="pwa-update-btn" id="pwaUpdateBtn">تحديث الآن</button><button class="pwa-update-close" id="pwaUpdateClose" aria-label="إغلاق">✕</button></div>';
+  document.body.appendChild(t);
+  requestAnimationFrame(function(){requestAnimationFrame(function(){t.classList.add('show');});});
+  document.getElementById('pwaUpdateBtn').addEventListener('click',function(){worker.postMessage({type:'SKIP_WAITING'});t.classList.remove('show');});
+  document.getElementById('pwaUpdateClose').addEventListener('click',function(){t.classList.remove('show');setTimeout(function(){t.remove();},400);});
+}
+</script>
+
+<!-- App JS: بدون defer — مثل v6 تماماً -->
+<script src="js/app.js"></script>
+
+<!-- Prayer scripts: بعد app.js -->
+<script src="js/locationService.js" defer></script>
+<script src="js/prayerService.js" defer></script>
+<script src="js/ui.js" defer></script>
+<script src="js/ui-enhancements.js" defer></script>
+<script src="js/recitationService.js" defer></script>
+<script src="js/recitationUI.js" defer></script>
+
+
+<!-- PWA Install Assistant -->
+<div id="pwaInstallPrompt" class="pwa-install-prompt" hidden role="dialog" aria-modal="false" aria-labelledby="pwaInstallTitle">
+  <button id="pwaInstallClose" class="pwa-install-close" type="button" aria-label="إغلاق">×</button>
+  <div class="pwa-install-icon" aria-hidden="true">⌂</div>
+  <div class="pwa-install-copy">
+    <strong id="pwaInstallTitle">ثبّت القرآن الكريم</strong>
+    <span>أضف التطبيق إلى الشاشة الرئيسية للوصول إليه بسرعة.</span>
+  </div>
+  <button id="pwaInstallButton" class="pwa-install-button" type="button">تثبيت</button>
+</div>
+
+</body>
+</html>
