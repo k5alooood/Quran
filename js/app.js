@@ -103,7 +103,8 @@ var EL={
   pbtn:g('pbtn'),mbtn:g('mbtn'),fpbtn:g('fpbtn'),
   mini:g('mini'),miniTitle:g('miniTitle'),miniSt:g('miniSt'),
   fst:g('fst'),fdiv:g('fdiv'),fexit:g('fexit'),focusbtn:g('focusbtn'),
-  sharebtn:g('sharebtn'),thbtn:g('thbtn'),
+  sharebtn:g('sharebtn'),thbtn:g('thbtn'),thbtnLabel:g('thbtnLabel'),
+  menuBtn:g('menuBtn'),appMenu:g('appMenu'),
   vrow:g('vrow'),mutebtn:g('mutebtn'),vslider:g('vslider'),vpct:g('vpct'),
   catPills:g('catPills'),stList:g('stList'),stSearch:g('stSearch'),
   tbTap:g('tbTap'),tbRst:g('tbRst'),tbNum:g('tbNum'),tbArc:g('tbArc'),
@@ -112,8 +113,7 @@ var EL={
   ml:g('ml'),el:g('el'),
   ftrStatus:g('ftrStatus'),ftrMsg:g('ftrMsg'),
   calHijri:g('calHijri'),calGreg:g('calGreg'),calDay:g('calDay'),
-  themeColorMeta:g('themeColorMeta'),
-  batterybtn:g('batterybtn')
+  themeColorMeta:g('themeColorMeta')
 };
 
 /* ═══════════════════════════════════════════
@@ -223,6 +223,9 @@ function saveAzProg(){ls('qr_azprog',JSON.stringify(azProg))}
 function applyTheme(t,save){
   theme=t;EL.html.setAttribute('data-theme',t);
   if(EL.themeColorMeta)EL.themeColorMeta.setAttribute('content',t==='dark'?'#06150e':'#faf7f0');
+  /* عنوان عنصر القائمة يصف الإجراء القادم: في الوضع الداكن يظهر "الوضع الفاتح" والعكس */
+  if(EL.thbtnLabel)EL.thbtnLabel.textContent=t==='dark'?'الوضع الفاتح':'الوضع الداكن';
+  if(EL.thbtn)EL.thbtn.setAttribute('aria-pressed',t==='light'?'true':'false');
   if(save)ls('qr_theme',t);
 }
 
@@ -748,11 +751,34 @@ function bindUI(){
   if(EL.tbRst)EL.tbRst.addEventListener('click',rstTasbeeh);
   if(EL.tbTargetBtn)EL.tbTargetBtn.addEventListener('click',cycleTbTarget);
 
-  /* Battery saver */
-  var bsOn=lg('qr_bsaver')==='1';
-  function applyBS(on){bsOn=on;document.body.classList.toggle('battery-saver',on);if(EL.batterybtn)EL.batterybtn.classList.toggle('bsaver-on',on);ls('qr_bsaver',on?'1':'0');}
-  applyBS(bsOn);
-  if(EL.batterybtn)EL.batterybtn.addEventListener('click',function(){applyBS(!bsOn);setStatus(bsOn?'warn':'ok',bsOn?'🔋 توفير الطاقة: مفعّل':'⚡ توفير الطاقة: متوقف');});
+  /* قائمة الإعدادات (تركيز/مظهر/مشاركة) — زر واحد يفتح قائمة منسدلة بدل ثلاثة أزرار منفصلة */
+  function closeMenu(){
+    if(EL.appMenu)EL.appMenu.classList.remove('open');
+    if(EL.menuBtn)EL.menuBtn.setAttribute('aria-expanded','false');
+    if(EL.appMenu)EL.appMenu.setAttribute('aria-hidden','true');
+  }
+  function openMenu(){
+    if(EL.appMenu)EL.appMenu.classList.add('open');
+    if(EL.menuBtn)EL.menuBtn.setAttribute('aria-expanded','true');
+    if(EL.appMenu)EL.appMenu.setAttribute('aria-hidden','false');
+  }
+  if(EL.menuBtn){
+    EL.menuBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      var isOpen=EL.appMenu&&EL.appMenu.classList.contains('open');
+      if(isOpen)closeMenu();else openMenu();
+    });
+  }
+  document.addEventListener('click',function(e){
+    if(EL.appMenu&&EL.appMenu.classList.contains('open')&&!e.target.closest('.menu-wrap'))closeMenu();
+  });
+  document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
+  /* إغلاق القائمة تلقائيًا بعد اختيار أي عنصر منها */
+  if(EL.appMenu){
+    EL.appMenu.querySelectorAll('.app-menu-item').forEach(function(btn){
+      btn.addEventListener('click',function(){closeMenu();});
+    });
+  }
 
   /* Preload */
   function preload(){if(!preloaded){audio.load();preloaded=true;}}
