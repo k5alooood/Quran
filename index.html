@@ -18,7 +18,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 
 <!-- SEO: تحسينات ميتا فقط — لا تأثير على أي كود وظيفي -->
-<meta name="description" content="استمع لإذاعات القرآن الكريم بثًا مباشرًا على مدار الساعة بأصوات أشهر القرّاء، وتابع مواقيت الصلاة بدقة حسب موقعك تلقائيًا، مع أذكار الصباح والمساء والسبحة الرقمية — كل ذلك في تطبيق ويب مجاني بالكامل يعمل من المتصفح فورًا بلا تحميل من أي متجر."/>
+<meta name="description" content="استمع إلى القرآن الكريم مباشر بجودة عالية، إذاعات القرآن الكريم، تلاوات أشهر القراء، الأذكار، مواقيت الصلاة وبوصلة القبلة في مكان واحد."/>
 <meta name="robots" content="index, follow"/>
 <meta name="author" content="خالد سامح"/>
 <link rel="canonical" href="https://qurankareem.live/"/>
@@ -44,22 +44,40 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "WebApplication",
-  "name": "القرآن الكريم مباشر",
-  "url": "https://qurankareem.live/",
-  "description": "بث مباشر لإذاعات القرآن الكريم وأشهر القراء، مع مواقيت الصلاة، الأذكار، والسبحة الرقمية.",
-  "applicationCategory": "LifestyleApplication",
-  "operatingSystem": "Any",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "inLanguage": "ar",
-  "author": {
-    "@type": "Person",
-    "name": "خالد سامح"
-  }
+  "@graph": [
+    {
+      "@type": "WebSite",
+      "@id": "https://qurankareem.live/#website",
+      "url": "https://qurankareem.live/",
+      "name": "القرآن الكريم مباشر",
+      "description": "استمع إلى القرآن الكريم مباشر، إذاعات القرآن الكريم، تلاوات أشهر القراء، الأذكار، مواقيت الصلاة وبوصلة القبلة.",
+      "inLanguage": "ar"
+    },
+    {
+      "@type": "WebApplication",
+      "@id": "https://qurankareem.live/#app",
+      "url": "https://qurankareem.live/",
+      "name": "القرآن الكريم مباشر",
+      "description": "استمع إلى القرآن الكريم مباشر بجودة عالية، إذاعات القرآن الكريم، تلاوات أشهر القراء، الأذكار، مواقيت الصلاة وبوصلة القبلة في مكان واحد.",
+      "applicationCategory": "LifestyleApplication",
+      "operatingSystem": "Android, iOS, Windows, macOS, Linux",
+      "browserRequirements": "Requires a modern web browser",
+      "inLanguage": "ar",
+      "isAccessibleForFree": true,
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "author": {
+        "@type": "Person",
+        "name": "خالد سامح"
+      },
+      "isPartOf": {
+        "@id": "https://qurankareem.live/#website"
+      }
+    }
+  ]
 }
 </script>
 
@@ -201,7 +219,7 @@
     </div>
     <div class="hero-copy">
       <p class="hero-kicker">استمع أينما كنت</p>
-      <h1>سكينةٌ في كل لحظة</h1>
+      <h1>القرآن الكريم مباشر — بث حي للقرآن الكريم</h1>
       <p>إذاعات القرآن الكريم، مواقيت الصلاة والأذكار في تطبيق واحد.</p>
     </div>
     <div class="hero-actions">
@@ -239,7 +257,7 @@
       <span id="npStation">اختر إذاعة</span>
     </div>
     <div>
-      <h1 class="np-title" id="npTitle">القرآن الكريم مباشر</h1>
+      <h2 class="np-title" id="npTitle">القرآن الكريم مباشر</h2>
       <p class="np-sub">بث مباشر · ٢٤ ساعة</p>
     </div>
     <div class="vwrap" aria-hidden="true">
