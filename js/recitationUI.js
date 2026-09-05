@@ -13,6 +13,9 @@ const RecitationUI = (function(){
   var selectedRiwayahId = null;
   var selectedReciter = null;
   var selectedMoshaf = null;
+  /* v28: تأخير بسيط لخانات البحث (نفس المنطق في app.js لكن نسخة محلية مستقلة —
+     يمنع إعادة رسم قائمة السور الـ114 مع كل حرف أثناء الكتابة السريعة) */
+  function debounce(fn,wait){var t;return function(){var ctx=this,args=arguments;clearTimeout(t);t=setTimeout(function(){fn.apply(ctx,args);},wait);};}
   var availableSurahIds = null; // null = كل السور
   var currentSurahNum = -1;
   var repeatMode = 'off'; // off | one | all
@@ -312,6 +315,17 @@ const RecitationUI = (function(){
     el.muteBtn.setAttribute('aria-pressed', showMuted ? 'true':'false');
   }
 
+  /* v27: مزامنة أيقونة زر المشغل العائم (mini) المشترك بصريًا — لازم تعكس حالة
+     التلاوة الفعلية وقت ما تكون هي المصدر النشط، وإلا فضلت الأيقونة عالقة على
+     آخر حالة إذاعة (انظر الحارس المقابل في render() بملف app.js) */
+  function syncMiniIcon(playing){
+    var btn=document.getElementById('mbtn');
+    if(!btn)return;
+    var p=btn.querySelector('.i-play'),ps=btn.querySelector('.i-pause');
+    if(p)p.classList.toggle('hidden',playing);
+    if(ps)ps.classList.toggle('hidden',!playing);
+  }
+
   /* ═══ ربط أحداث الصوت ═══ */
   function bindAudio(){
     audio.addEventListener('play', function(){
@@ -320,6 +334,7 @@ const RecitationUI = (function(){
       if(el.npIcon) el.npIcon.classList.add('playing');
       if(el.playBtn) el.playBtn.classList.add('playing');
       announceActive();
+      syncMiniIcon(true);
     });
     audio.addEventListener('pause', function(){
       if(el.playBtn){el.playBtn.querySelector('.i-play').classList.remove('hidden');el.playBtn.querySelector('.i-pause').classList.add('hidden');}
@@ -327,6 +342,7 @@ const RecitationUI = (function(){
       if(el.npIcon) el.npIcon.classList.remove('playing');
       if(el.playBtn) el.playBtn.classList.remove('playing');
       saveState();
+      if(window.__activeAudioSource==='recite')syncMiniIcon(false);
     });
     audio.addEventListener('loadedmetadata', function(){
       if(el.durTime) el.durTime.textContent = fmtTime(audio.duration);
@@ -444,13 +460,15 @@ const RecitationUI = (function(){
       if(!btn) return;
       selectRiwayah(btn.dataset.id);
     });
+    var debouncedRenderReciters=debounce(renderReciters,150);
     if(el.recSearch) el.recSearch.addEventListener('input', function(){
       recSearchQ = el.recSearch.value;
-      renderReciters();
+      debouncedRenderReciters();
     });
+    var debouncedRenderSurahs=debounce(renderSurahs,150);
     if(el.surahSearch) el.surahSearch.addEventListener('input', function(){
       surahSearchQ = el.surahSearch.value;
-      renderSurahs();
+      debouncedRenderSurahs();
     });
     if(el.backBtn) el.backBtn.addEventListener('click', function(){
       view='browse';

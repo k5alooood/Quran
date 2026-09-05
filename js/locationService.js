@@ -29,7 +29,7 @@ const LocationService = (() => {
   const fromGPS = () => new Promise((resolve, reject) => {
     if (!navigator.geolocation) { reject(new Error('no_geo')); return; }
     navigator.geolocation.getCurrentPosition(
-      pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      pos => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude, accuracy: pos.coords.accuracy }),
       err => reject(err),
       /* timeout رُفع إلى 10000ms — GPS الداخلي والأجهزة البطيئة تحتاج وقتاً أطول */
       { timeout: 10000, maximumAge: 300000 }
@@ -87,10 +87,10 @@ const LocationService = (() => {
 
     // 1. Try GPS + reverse geocode
     try {
-      const { lat, lon } = await fromGPS();
+      const { lat, lon, accuracy } = await fromGPS();
       const geo = await reverseGeocode(lat, lon);
       result = {
-        lat, lon,
+        lat, lon, accuracy,
         city: geo.city,
         country: geo.country,
         countryCode: geo.countryCode,

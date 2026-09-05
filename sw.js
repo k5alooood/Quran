@@ -4,21 +4,29 @@
    bumped only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم. ضروري هذه المرة
    تحديدًا لأنه يحمل إصلاح خطأ توقيت الصلاة الجذري (فارق ساعات كامل) + إزالة قسم
    الخصوصية من الفوتر — يجب وصوله فعليًا لكل المستخدمين الحاليين فورًا) */
-const CACHE_S = 'quran-static-v5-r7';
-const CACHE_P = 'quran-pages-v5-r7';
+const CACHE_S = 'quran-static-v5-r15';
+const CACHE_P = 'quran-pages-v5-r15';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
-  './audio/takbeer.mp3'
+  './favicon-16.png', './favicon-32.png', './favicon-48.png',
+  './audio/takbeer.mp3',
+  './vendor/adhan.umd.min.js'
+  /* ملاحظة: vendor/hls.min.js مقصود استبعاده من التخزين المسبق الإلزامي —
+     413KB لا يستحق تحميلها لكل زائر؛ يُخزَّن تلقائيًا بواسطة CACHE_S العادي
+     في أول مرة يُطلَب فيها فعليًا (أول تشغيل لإذاعة HLS)، فيتوفر بعدها بلا
+     إنترنت أيضًا دون فرضه على كل من لم يشغّل الراديو أصلًا */
 ];
 
 const PAGES = ['./', './index.html', './manifest.json', './offline.html'];
 
 const ASSETS = [
   './css/styles.min.css',
-  './js/app.js', './js/locationService.js', './js/prayerService.js', './js/ui.js',
+  './js/app.js', './js/locationService.js', './js/qiblaService.js', './js/qiblaUI.js',
+  './js/prayerService.js', './js/ui.js',
   './js/ui-enhancements.js', './js/pwa-install.js',
-  './js/recitationService.js', './js/recitationUI.js'
+  './js/recitationService.js', './js/recitationUI.js',
+  './vendor/adhan.umd.min.js'
 ];
 
 const BYPASS = [

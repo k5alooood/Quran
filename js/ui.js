@@ -6,7 +6,8 @@
  * ✓ عرض المواقيت + العداد التنازلي
  * ✓ زر الجرس: تنبيه صوتي عند دخول وقت الصلاة
  * ✓ رسالة Flash عند دخول وقت الصلاة
- * ✗ بدون أي كود بوصلة قبلة (محذوف كاملاً)
+ * ✓ زر فتح بوصلة اتجاه القبلة (المنطق الفعلي في QiblaUI/QiblaService — هذا الملف
+ *   يعرض فقط زر الفتح عبر data-qibla-open)
  */
 const PrayerUI = (() => {
 
@@ -117,6 +118,29 @@ const PrayerUI = (() => {
      HTML Templates
   ══════════════════════════════════════════════════ */
 
+  /* زر فتح بوصلة القبلة — يجب أن يظهر في كل حالات القسم (تحميل/خطأ/يدوي/جاهز)
+     لأن القبلة تحتاج فقط الموقع الجغرافي، لا بيانات مواقيت الصلاة نفسها —
+     فشل جلب المواقيت (شبكة/API) يجب ألا يخفي وصول المستخدم لهذه الميزة المستقلة */
+  const makeQiblaBtnHTML = () => `
+    <button class="pt-qibla-btn" id="ptQiblaBtn" type="button" title="اتجاه القبلة" aria-label="اتجاه القبلة" data-qibla-open>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"/>
+        <path d="M12 12 15.6 7.4 14.3 12.9 8.6 15.2Z" fill="currentColor" stroke="none"/>
+      </svg>
+    </button>`;
+
+  /* رأس القسم المشترك — نفس الأيقونة والعنوان في كل الحالات، مع إمكانية إلحاق
+     أزرار إضافية خاصة بحالة "جاهز" فقط (الجرس + التحديث) عبر extraBtns */
+  const makeSectionTitleHTML = (extraBtns = '') => `
+    <div class="pt-section-title">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+      </svg>
+      مواقيت الصلاة
+      ${makeQiblaBtnHTML()}
+      ${extraBtns}
+    </div>`;
+
   /* زر الجرس */
   const makeBellBtnHTML = () => `
     <button class="pt-bell-btn" id="ptBellBtn" type="button"
@@ -141,11 +165,7 @@ const PrayerUI = (() => {
 
   /* Skeleton */
   const skeletonHTML = () => `
-    <div class="pt-section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>مواقيت الصلاة
-    </div>
+    ${makeSectionTitleHTML()}
     <div class="pt-skeleton">
       <div class="pt-sk-header">
         <div class="pt-sk-bar w60 pulse"></div>
@@ -159,11 +179,7 @@ const PrayerUI = (() => {
 
   /* Error */
   const makeErrorHTML = (msg, retryId) => `
-    <div class="pt-section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>مواقيت الصلاة
-    </div>
+    ${makeSectionTitleHTML()}
     <div class="pt-error">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="30" height="30">
         <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>
@@ -175,11 +191,7 @@ const PrayerUI = (() => {
 
   /* Manual city select */
   const makeManualHTML = selId => `
-    <div class="pt-section-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-      </svg>مواقيت الصلاة
-    </div>
+    ${makeSectionTitleHTML()}
     <div class="pt-manual">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="24" height="24" stroke-linecap="round">
         <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
@@ -210,11 +222,7 @@ const PrayerUI = (() => {
     const methodLabel = prayers[0]?.method || 'مواقيت الصلاة';
 
     return `
-      <div class="pt-section-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
-          <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-        </svg>
-        مواقيت الصلاة
+      ${makeSectionTitleHTML(`
         ${makeBellBtnHTML()}
         <button class="pt-refresh-btn" id="ptRefreshBtn" title="تحديث الموقع">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
@@ -222,7 +230,7 @@ const PrayerUI = (() => {
             <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
           </svg>
         </button>
-      </div>
+      `)}
       ${isFallback ? makeFallbackNoticeHTML(manualBtnId) : ''}
       <div class="pt-header">
         <div class="pt-location">

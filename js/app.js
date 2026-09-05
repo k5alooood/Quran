@@ -91,6 +91,9 @@ function g(id){return document.getElementById(id)}
 function ls(k,v){try{localStorage.setItem(k,String(v))}catch(e){}}
 function lg(k){try{return localStorage.getItem(k)}catch(e){return null}}
 function h(el,hide){if(el){if(hide)el.classList.add('hidden');else el.classList.remove('hidden')}}
+/* v28: تأخير بسيط (debounce) — يمنع إعادة رسم القوائم مع كل ضغطة زر أثناء الكتابة
+   السريعة في خانات البحث؛ يحسّن الاستجابة فعليًا على القوائم الطويلة والأجهزة الأبطأ */
+function debounce(fn,wait){var t;return function(){var ctx=this,args=arguments;clearTimeout(t);t=setTimeout(function(){fn.apply(ctx,args);},wait);};}
 
 /* ═══════════════════════════════════════════
    ELEMENT REFS
@@ -254,7 +257,7 @@ function getStIcon(st){
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2" width="6" height="11" rx="3" fill="currentColor" fill-opacity=".14"/><path d="M19 10a7 7 0 0 1-14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="8" y1="22" x2="16" y2="22"/></svg>':
     st.id==='tafs'||st.id==='ruq'?
     '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" fill="currentColor" fill-opacity=".1"/><circle cx="8" cy="14" r="3.5" fill="currentColor" fill-opacity=".15"/><line x1="14" y1="10" x2="19" y2="10"/><line x1="14" y1="13" x2="19" y2="13"/></svg>':
-    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 18.5a2.5 2.5 0 0 1-2.5 2.5H17a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h4v4.5z" fill="currentColor" fill-opacity=".15"/><path d="M3 18.5A2.5 2.5 0 0 0 5.5 21H7a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3v4.5z" fill="currentColor" fill-opacity=".15"/></svg>';
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M16.247 7.761a6 6 0 0 1 0 8.478m2.828-11.306a10 10 0 0 1 0 14.134m-14.15 0a10 10 0 0 1 0-14.134m2.828 11.306a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/></svg>';
   return '<div class="st-icon st-icon--svg">'+svg+'</div>';
 }
 
@@ -327,9 +330,28 @@ function playStation(st){
 
 var HLS_MAX_INLINE_RECOVERY=3; /* v5: عدد محاولات التعافي الداخلية في hls.js قبل التصعيد لـ handleFail() (خادم احتياطي + توقف نهائي) */
 var hlsNetworkRecoveries=0,hlsMediaRecoveries=0;
+/* v26: تحميل مؤجَّل (lazy) لمكتبة hls.js — تُجلب من CDN أول مرة فعليًا تحتاجها إذاعة
+   بصيغة HLS، مش لكل زائر بشكل غير مشروط زي الأول. حالة واحدة مشتركة تمنع أي تكرار
+   لعملية التحميل لو اتنادت loadUrl أكتر من مرة قبل ما تخلص أول محاولة. */
+var hlsScriptState='idle';var hlsWaiters=[];
+function ensureHlsLib(cb){
+  if(hlsScriptState==='ready'||hlsScriptState==='failed'){cb();return;}
+  hlsWaiters.push(cb);
+  if(hlsScriptState==='loading')return;
+  hlsScriptState='loading';
+  var s=document.createElement('script');
+  s.src='vendor/hls.min.js';
+  s.onload=function(){hlsScriptState='ready';hlsWaiters.forEach(function(fn){fn();});hlsWaiters=[];};
+  s.onerror=function(){hlsScriptState='failed';window.__hlsLoadFailed=true;hlsWaiters.forEach(function(fn){fn();});hlsWaiters=[];};
+  document.head.appendChild(s);
+}
 function loadUrl(url){
   ignSrc=true;
   hlsNetworkRecoveries=0;hlsMediaRecoveries=0;
+  if(url.indexOf('.m3u8')!==-1&&typeof Hls==='undefined'&&hlsScriptState!=='failed'){
+    ensureHlsLib(function(){loadUrl(url);});
+    return;
+  }
   if(url.indexOf('.m3u8')!==-1&&typeof Hls!=='undefined'&&Hls.isSupported()){
     hlsInst=new Hls({enableWorker:true,lowLatencyMode:true,backBufferLength:90});
     hlsInst.loadSource(url);hlsInst.attachMedia(audio);
@@ -444,6 +466,7 @@ function render(state){
   h(EL.viz,true);h(EL.spwrap,true);h(EL.ewrap,true);if(EL.viz)EL.viz.classList.remove('on');
   if(EL.npSlab)EL.npSlab.className='np-slab';
   if(EL.strow)EL.strow.className='strow';
+  var isMiniRadio=window.__activeAudioSource!=='recite'; /* v27: المشغل العائم مشترك — لا نلمس أيقونته إلا لو الإذاعة هي المصدر النشط فعليًا */
   var play1=EL.pbtn&&EL.pbtn.querySelector('.i-play');
   var pause1=EL.pbtn&&EL.pbtn.querySelector('.i-pause');
   var play2=EL.mbtn&&EL.mbtn.querySelector('.i-play');
@@ -451,44 +474,44 @@ function render(state){
   var play3=EL.fpbtn?EL.fpbtn.querySelector('.i-play'):null;
   var pause3=EL.fpbtn?EL.fpbtn.querySelector('.i-pause'):null;
   if(state==='playing'){
-    h(EL.viz,false);if(EL.viz)EL.viz.classList.add('on');h(play1,true);h(pause1,false);h(play2,true);h(pause2,false);
+    h(EL.viz,false);if(EL.viz)EL.viz.classList.add('on');h(play1,true);h(pause1,false);if(isMiniRadio){h(play2,true);h(pause2,false);}
     if(play3)h(play3,true);if(pause3)h(pause3,false);
     if(EL.pbtn)EL.pbtn.classList.add('playing');
     if(EL.npSlab)EL.npSlab.classList.add('live');
     if(EL.strow)EL.strow.classList.add('live');
     if(EL.npCard)EL.npCard.classList.add('playing');
     if(EL.sttxt)EL.sttxt.textContent='جارٍ البث';
-    if(EL.miniSt)EL.miniSt.textContent='جارٍ البث';
+    if(EL.miniSt&&window.__activeAudioSource!=='recite')EL.miniSt.textContent='جارٍ البث';
     if(EL.fst)EL.fst.textContent='جارٍ البث';
     document.querySelectorAll('.st-item').forEach(function(d){d.classList.toggle('playing',d.getAttribute('data-id')===(currentSt?currentSt.id:''));});
     if('mediaSession' in navigator)navigator.mediaSession.playbackState='playing';
   } else if(state==='loading'){
-    h(EL.spwrap,false);h(play1,false);h(pause1,true);h(play2,false);h(pause2,true);
+    h(EL.spwrap,false);h(play1,false);h(pause1,true);if(isMiniRadio){h(play2,false);h(pause2,true);}
     if(play3)h(play3,false);if(pause3)h(pause3,true);
     if(EL.pbtn)EL.pbtn.classList.remove('playing');
     if(EL.npSlab)EL.npSlab.classList.add('buf');
     if(EL.strow)EL.strow.classList.add('loading');
     if(EL.npCard)EL.npCard.classList.remove('playing');
     if(EL.sttxt)EL.sttxt.textContent='جارٍ الاتصال';
-    if(EL.miniSt)EL.miniSt.textContent='جارٍ الاتصال';
+    if(EL.miniSt&&window.__activeAudioSource!=='recite')EL.miniSt.textContent='جارٍ الاتصال';
     if(EL.fst)EL.fst.textContent='جارٍ الاتصال';
   } else if(state==='error'){
-    h(EL.ewrap,false);h(play1,false);h(pause1,true);h(play2,false);h(pause2,true);
+    h(EL.ewrap,false);h(play1,false);h(pause1,true);if(isMiniRadio){h(play2,false);h(pause2,true);}
     if(EL.pbtn)EL.pbtn.classList.remove('playing');
     if(EL.strow)EL.strow.classList.add('error');
     if(EL.npCard)EL.npCard.classList.remove('playing');
     if(EL.sttxt)EL.sttxt.textContent='خطأ في الاتصال';
-    if(EL.miniSt)EL.miniSt.textContent='خطأ في الاتصال';
+    if(EL.miniSt&&window.__activeAudioSource!=='recite')EL.miniSt.textContent='خطأ في الاتصال';
     if(EL.fst)EL.fst.textContent='خطأ';
     document.querySelectorAll('.st-item').forEach(function(d){d.classList.remove('playing');});
     if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';
   } else {
-    h(play1,false);h(pause1,true);h(play2,false);h(pause2,true);
+    h(play1,false);h(pause1,true);if(isMiniRadio){h(play2,false);h(pause2,true);}
     if(play3)h(play3,false);if(pause3)h(pause3,true);
     if(EL.pbtn)EL.pbtn.classList.remove('playing');
     if(EL.npCard)EL.npCard.classList.remove('playing');
     if(EL.sttxt)EL.sttxt.textContent='متوقف';
-    if(EL.miniSt)EL.miniSt.textContent='متوقف';
+    if(EL.miniSt&&window.__activeAudioSource!=='recite')EL.miniSt.textContent='متوقف';
     if(EL.fst)EL.fst.textContent='متوقف';
     document.querySelectorAll('.st-item').forEach(function(d){d.classList.remove('playing');});
     if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused';
@@ -658,6 +681,13 @@ function setupBnav(){
       observerSuspended=true;
       if(resumeTimer)clearTimeout(resumeTimer);
       el.scrollIntoView({behavior:'smooth',block:'start'});
+      /* v6: نبضة وصول ذهبية خفيفة على البطاقة الهدف — تعزيز بصري لإحساس
+         "الانتقال السلس" عند التنقل عبر الشريط السفلي، بدون أي تغيير في آلية
+         التمرير نفسها. تُزال تلقائيًا بعد انتهاء الحركة فلا تتراكم. */
+      el.classList.remove('section-arrive');
+      void el.offsetWidth;/* إعادة تشغيل الأنيميشن حتى لو نُقر لنفس القسم مرتين متتاليتين */
+      el.classList.add('section-arrive');
+      setTimeout(function(){el.classList.remove('section-arrive');},900);
       /* يُستأنف رصد التمرير الحر بعد انتهاء حركة scrollIntoView السلسة تقريبًا */
       resumeTimer=setTimeout(function(){observerSuspended=false;},900);
     });
@@ -726,10 +756,20 @@ function toggleMute(){
 ═══════════════════════════════════════════ */
 function bindUI(){
   if(EL.pbtn)EL.pbtn.addEventListener('click',togglePlay);
-  if(EL.mbtn)EL.mbtn.addEventListener('click',togglePlay);
+  /* v27: زر تشغيل/إيقاف المشغل العائم (mini) مشترك بصريًا بين الإذاعة والتلاوات —
+     لازم يوجّه الأمر لمصدر الصوت النشط فعليًا، مش الإذاعة دايمًا؛ وإلا كان بيوقف
+     التلاوة الجارية ويحاول شغّل آخر محطة إذاعة بدل التحكم في التلاوة نفسها. */
+  if(EL.mbtn)EL.mbtn.addEventListener('click',function(){
+    if(window.__activeAudioSource==='recite'&&window.RecitationUI&&window.RecitationUI.toggle){
+      window.RecitationUI.toggle();
+    } else {
+      togglePlay();
+    }
+  });
   if(EL.fpbtn)EL.fpbtn.addEventListener('click',togglePlay);
   if(EL.rbtn)EL.rbtn.addEventListener('click',manualRetry);
-  if(EL.stSearch)EL.stSearch.addEventListener('input',function(e){stSearchQuery=e.target.value;renderStations();});
+  var debouncedRenderStations=debounce(renderStations,150);
+  if(EL.stSearch)EL.stSearch.addEventListener('input',function(e){stSearchQuery=e.target.value;debouncedRenderStations();});
   if(!isIOS){
     if(EL.vslider)EL.vslider.addEventListener('input',function(e){setVol(parseInt(e.target.value,10));});
     if(EL.mutebtn)EL.mutebtn.addEventListener('click',toggleMute);
@@ -797,6 +837,7 @@ function bindUI(){
 /* bell state from ui.js */
 document.addEventListener('DOMContentLoaded',function(){
   if(typeof PrayerUI!=='undefined'&&typeof LocationService!=='undefined'&&typeof PrayerService!=='undefined')PrayerUI.init();
+  if(typeof QiblaUI!=='undefined'&&typeof QiblaService!=='undefined'&&typeof LocationService!=='undefined')QiblaUI.init();
 });
 
 /* واجهة صغيرة مُعرَّضة للتحكم المتبادل مع قسم التلاوات (منع تشغيل مصدرين معًا) */

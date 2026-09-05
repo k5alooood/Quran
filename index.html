@@ -64,15 +64,22 @@
 </script>
 
 <link rel="manifest" href="manifest.json"/>
+<!-- أيقونة مبسّطة جريئة الخطوط للأحجام الصغيرة جدًا (تبويب المتصفح) — التفاصيل الدقيقة
+     في icon.svg الأصلية تصبح غير واضحة عند التصغير التلقائي إلى 16-32px -->
+<link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="48x48" href="favicon-48.png"/>
 <link rel="icon" type="image/svg+xml" href="icon.svg"/>
 <link rel="apple-touch-icon" href="icon-180.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet"/>
 
-<!-- HLS.js + Adhan: v25 — defer بدل التحميل الحاجب؛ آمن لأن app.js يتحقق من typeof Hls/adhan دفاعيًا ولا يستخدمهما إلا بعد تفاعل المستخدم أو DOMContentLoaded -->
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.15/dist/hls.min.js" defer onerror="window.__hlsLoadFailed=true"></script>
-<script src="https://cdn.jsdelivr.net/npm/adhan@4.4.3/lib/bundles/adhan.umd.min.js" defer onerror="window.__adhanLoadFailed=true"></script>
+<!-- v27: adhan.js مُستضاف محليًا (بدل CDN) — تحميل أسرع وأوثق (بلا اعتماد على طرف
+     ثالث)، مع بقاء defer وبقاء التحقق الدفاعي typeof adhan في الكود كما هو.
+     HLS.js يُحمَّل من vendor/ محليًا أيضًا، لكن فقط عند الحاجة الفعلية (انظر
+     ensureHlsLib في app.js) لا عند كل زيارة. -->
+<script src="vendor/adhan.umd.min.js" defer onerror="window.__adhanLoadFailed=true"></script>
 
 <!-- v25: ملف CSS واحد مدمج بدل 4 ملفات منفصلة (نفس ترتيب الـ cascade الأصلي، بدون أي تغيير بصري) -->
 <link rel="stylesheet" href="css/styles.min.css"/>
@@ -92,7 +99,15 @@
         <stop offset="75%" stop-color="#ecc95a"/>
         <stop offset="100%" stop-color="#f5df8c"/>
       </linearGradient>
+      <!-- زخرفة هندسية إسلامية: نجمة ثمانية (مربعان متقاطعان) مكررة بتباعد -->
+      <pattern id="islamicStar" width="140" height="140" patternUnits="userSpaceOnUse">
+        <g transform="translate(70,70)" fill="none" stroke="currentColor" stroke-width="1">
+          <rect x="-30" y="-30" width="60" height="60"/>
+          <rect x="-30" y="-30" width="60" height="60" transform="rotate(45)"/>
+        </g>
+      </pattern>
     </defs>
+    <rect x="0" y="0" width="1200" height="800" fill="url(#islamicStar)"/>
     <path d="M0 400 Q300 100 600 400 T1200 400" stroke="rgba(212,175,55,0.035)" fill="none" stroke-width="1.5"/>
     <path d="M0 500 Q400 200 800 500 T1200 500" stroke="rgba(212,175,55,0.025)" fill="none" stroke-width="1"/>
     <line x1="0" y1="0" x2="1200" y2="800" stroke="rgba(212,175,55,0.015)" stroke-width="1"/>
@@ -125,6 +140,17 @@
       <path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>
     </svg>
   </button>
+</div>
+
+<!-- Qibla compass -->
+<div id="qiblaScreen" class="qibla-screen hidden" role="dialog" aria-modal="true" aria-hidden="true" aria-label="اتجاه القبلة">
+  <div class="qibla-topbar">
+    <span class="qibla-topbar-title">اتجاه القبلة</span>
+    <button class="qibla-close" id="qiblaClose" aria-label="إغلاق">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="qibla-body" id="qiblaBody"></div>
 </div>
 
 <div class="wrap" role="main">
@@ -277,7 +303,7 @@
   <section class="card sec-card" id="stationsCard" aria-label="الإذاعات المتاحة">
     <div class="sec-header">
       <h2 class="sec-title">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M16.247 7.761a6 6 0 0 1 0 8.478m2.828-11.306a10 10 0 0 1 0 14.134m-14.15 0a10 10 0 0 1 0-14.134m2.828 11.306a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/></svg>
         الإذاعات
       </h2>
       <div class="cat-pills" id="catPills" role="tablist" aria-label="تصفية الإذاعات"></div>
@@ -418,7 +444,7 @@
   <!-- Azkar -->
   <section class="card azcard" id="azCard" aria-label="أذكار الصباح والمساء">
     <h2 class="az-title">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v23H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 10.6 7.4 15 9 10.6 10.6 9 15 7.4 10.6 3 9 7.4 7.4Z" fill="currentColor" fill-opacity=".18"/><path d="M18.5 3v3.4M16.8 4.7h3.4"/></svg>
       الأذكار
     </h2>
     <details id="detMorning">
@@ -442,6 +468,12 @@
     <div class="pt-section-title">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       مواقيت الصلاة
+      <button class="pt-qibla-btn" id="ptQiblaBtnStatic" type="button" title="اتجاه القبلة" aria-label="اتجاه القبلة" data-qibla-open>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/>
+          <path d="M12 12 15.6 7.4 14.3 12.9 8.6 15.2Z" fill="currentColor" stroke="none"/>
+        </svg>
+      </button>
     </div>
     <div class="pt-skeleton" aria-busy="true">
       <div class="pt-sk-header"><div class="pt-sk-bar w60 pulse"></div><div class="pt-sk-bar w30 pulse"></div></div>
@@ -468,11 +500,11 @@
 <!-- Bottom Navigation -->
 <nav class="bnav" id="bnav" aria-label="التنقل الرئيسي">
   <a href="#npCard" class="bnav-item active" data-target="npCard" aria-current="page">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8" fill="currentColor" stroke="none"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9.5 12 2l9 7.5V21a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"/><path d="M9 22V12h6v10"/></svg>
     <span>الرئيسية</span>
   </a>
   <a href="#stationsCard" class="bnav-item" data-target="stationsCard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M16.247 7.761a6 6 0 0 1 0 8.478m2.828-11.306a10 10 0 0 1 0 14.134m-14.15 0a10 10 0 0 1 0-14.134m2.828 11.306a6 6 0 0 1 0-8.478"/><circle cx="12" cy="12" r="2"/></svg>
     <span>الإذاعات</span>
   </a>
   <a href="#reciteCard" class="bnav-item" data-target="reciteCard">
@@ -480,7 +512,7 @@
     <span>التلاوات</span>
   </a>
   <a href="#azCard" class="bnav-item" data-target="azCard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v23H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 10.6 7.4 15 9 10.6 10.6 9 15 7.4 10.6 3 9 7.4 7.4Z" fill="currentColor" fill-opacity=".18"/><path d="M18.5 3v3.4M16.8 4.7h3.4"/></svg>
     <span>الأذكار</span>
   </a>
   <a href="#tbCard" class="bnav-item" data-target="tbCard">
@@ -488,7 +520,7 @@
     <span>السبحة</span>
   </a>
   <a href="#prayerSection" class="bnav-item" data-target="prayerSection">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 2v4"/><path d="M5 12H3"/><path d="M21 12h-2"/><path d="M6.34 6.34 4.93 4.93"/><path d="M19.07 4.93 17.66 6.34"/><path d="M12 20a8 8 0 0 0 8-8H4a8 8 0 0 0 8 8z"/></svg>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
     <span>الصلاة</span>
   </a>
 </nav>
@@ -543,10 +575,12 @@ function showPWAUpdateToast(worker){
 </script>
 
 <!-- App JS: بدون defer — مثل v6 تماماً -->
-<script src="js/app.js"></script>
+<script src="js/app.js" defer></script>
 
 <!-- Prayer scripts: بعد app.js -->
 <script src="js/locationService.js" defer></script>
+<script src="js/qiblaService.js" defer></script>
+<script src="js/qiblaUI.js" defer></script>
 <script src="js/prayerService.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/ui-enhancements.js" defer></script>

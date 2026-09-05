@@ -30,7 +30,7 @@
 
   function showPrompt(title, copy, buttonText = 'تثبيت', manual = false) {
     const el = promptEl();
-    if (!el || isStandalone() || wasDismissed()) return;
+    if (!el || isStandalone() || wasDismissed() || isAnyModalOpen()) return;
 
     manualMode = manual;
     $('pwaInstallTitle')?.replaceChildren(document.createTextNode(title));
@@ -39,6 +39,15 @@
 
     el.hidden = false;
     requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add('is-visible')));
+  }
+
+  /* لا نُظهر بانر التثبيت فوق أي شاشة ملء-شاشة أخرى (وضع التركيز / بوصلة القبلة) —
+     يتحقق قبل العرض، ويُخفي البانر تلقائيًا إن كان ظاهرًا بالفعل عند فتح إحداها */
+  function isAnyModalOpen() {
+    const fdiv = $('fdiv');
+    const qibla = $('qiblaScreen');
+    return (fdiv && !fdiv.classList.contains('hidden')) ||
+           (qibla && !qibla.classList.contains('hidden'));
   }
 
   function hidePrompt(save = false) {
@@ -84,6 +93,23 @@
   document.addEventListener('DOMContentLoaded', () => {
     $('pwaInstallClose')?.addEventListener('click', () => hidePrompt(true));
     installBtn()?.addEventListener('click', handleInstallClick);
+
+    /* إخفاء فوري ومؤقت (بدون تعليم "تم الرفض") إن كان البانر ظاهرًا بالفعل
+       لحظة فتح وضع التركيز أو بوصلة القبلة — تجربة الشاشة الكاملة أولوية.
+       نراقب تغيّر كلاس "hidden" على الشاشتين مباشرة بدل الاعتماد على أحداث نقر
+       قد لا تلتقط لحظة الفتح فعليًا (الفتح قد يحدث برمجيًا أيضًا) */
+    const watchModal = id => {
+      const el = $(id);
+      if (!el) return;
+      new MutationObserver(() => {
+        if (!el.classList.contains('hidden')) {
+          const prompt = promptEl();
+          if (prompt && prompt.classList.contains('is-visible')) hidePrompt(false);
+        }
+      }).observe(el, { attributes: true, attributeFilter: ['class'] });
+    };
+    watchModal('fdiv');
+    watchModal('qiblaScreen');
 
     window.setTimeout(() => {
       if (isStandalone() || wasDismissed() || deferredPrompt) return;

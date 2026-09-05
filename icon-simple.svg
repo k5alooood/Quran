@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bgS" cx="50%" cy="40%" r="65%">
+      <stop offset="0%" stop-color="#0d2318"/>
+      <stop offset="100%" stop-color="#06150e"/>
+    </radialGradient>
+    <linearGradient id="goldS" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#f0d06a"/>
+      <stop offset="100%" stop-color="#d4af37"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="14" fill="url(#bgS)"/>
+  <!-- كتاب مبسّط وجريء يقرأ بوضوح حتى في 16×16 -->
+  <path d="M32 22c-6-4-13-4.5-19-2v22c6-2.5 13-2 19 2Z" fill="url(#goldS)"/>
+  <path d="M32 22c6-4 13-4.5 19-2v22c-6-2.5-13-2-19 2Z" fill="url(#goldS)" opacity=".72"/>
+  <rect x="30.6" y="21" width="2.8" height="25" fill="#0d2318" opacity=".55"/>
+</svg>
