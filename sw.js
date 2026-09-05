@@ -4,8 +4,8 @@
    bumped only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم. ضروري هذه المرة
    تحديدًا لأنه يحمل إصلاح خطأ توقيت الصلاة الجذري (فارق ساعات كامل) + إزالة قسم
    الخصوصية من الفوتر — يجب وصوله فعليًا لكل المستخدمين الحاليين فورًا) */
-const CACHE_S = 'quran-static-v5-r15';
-const CACHE_P = 'quran-pages-v5-r15';
+const CACHE_S = 'quran-static-v5-r16';
+const CACHE_P = 'quran-pages-v5-r16';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -93,7 +93,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (isAsset) {
-    event.respondWith(staleWhileRevalidate(event.request, CACHE_S));
+    event.respondWith(networkFirst(event.request, CACHE_S));
     return;
   }
 
