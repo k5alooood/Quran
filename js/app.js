@@ -837,7 +837,31 @@ function bindUI(){
 /* bell state from ui.js */
 document.addEventListener('DOMContentLoaded',function(){
   if(typeof PrayerUI!=='undefined'&&typeof LocationService!=='undefined'&&typeof PrayerService!=='undefined')PrayerUI.init();
-  if(typeof QiblaUI!=='undefined'&&typeof QiblaService!=='undefined'&&typeof LocationService!=='undefined')QiblaUI.init();
+});
+
+/* v29: تحميل مؤجَّل لبوصلة القبلة — أول ضغطة فعلية على زرها تجيب qiblaService.js
+   ثم qiblaUI.js بالترتيب (تبعية حقيقية)، تشغّل init() ثم open()، وبعدها تسيب
+   المجال لمُستمِع النقر الداخلي في qiblaUI.js نفسه للضغطات التالية. */
+var qiblaBootstrapped=false;
+function ensureQiblaLoaded(cb){
+  if(qiblaBootstrapped){cb();return;}
+  qiblaBootstrapped=true;
+  var s1=document.createElement('script');
+  s1.src='js/qiblaService.js';
+  s1.onload=function(){
+    var s2=document.createElement('script');
+    s2.src='js/qiblaUI.js';
+    s2.onload=cb;
+    document.head.appendChild(s2);
+  };
+  document.head.appendChild(s1);
+}
+document.addEventListener('click',function(e){
+  if(!e.target.closest('[data-qibla-open]'))return;
+  if(typeof QiblaUI!=='undefined')return; /* بقية النقرات بعد أول تحميل يتكفّل بيها مستمع qiblaUI.js نفسه */
+  ensureQiblaLoaded(function(){
+    if(typeof QiblaUI!=='undefined'&&typeof LocationService!=='undefined'){QiblaUI.init();QiblaUI.open();}
+  });
 });
 
 /* واجهة صغيرة مُعرَّضة للتحكم المتبادل مع قسم التلاوات (منع تشغيل مصدرين معًا) */

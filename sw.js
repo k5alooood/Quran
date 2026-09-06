@@ -4,8 +4,8 @@
    bumped only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم. ضروري هذه المرة
    تحديدًا لأنه يحمل إصلاح خطأ توقيت الصلاة الجذري (فارق ساعات كامل) + إزالة قسم
    الخصوصية من الفوتر — يجب وصوله فعليًا لكل المستخدمين الحاليين فورًا) */
-const CACHE_S = 'quran-static-v5-r16';
-const CACHE_P = 'quran-pages-v5-r16';
+const CACHE_S = 'quran-static-v5-r18';
+const CACHE_P = 'quran-pages-v5-r18';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -100,25 +100,33 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(cacheFirst(event.request, CACHE_S));
 });
 
-async function networkFirst(request, cacheName) {
-  try {
-    const response = await fetch(request);
-    if (response?.ok) {
-      const clone = response.clone();
-      caches.open(cacheName).then((cache) => cache.put(request, clone));
-    }
+async function networkFirst(request, cacheName, timeoutMs = 1800) {
+  /* v29: سباق بمهلة — لو الشبكة بطيئة (مش معطوبة تمامًا)، منستنّاش أكتر من
+     المهلة المحددة قبل ما نرجّع أي نسخة مخزّنة صالحة فورًا؛ الطلب الشبكي
+     يكمل في الخلفية ويحدّث الكاش لأي زيارة تالية. بيحافظ على قصد "الأحدث
+     دايمًا" بدون ما يوقّف عرض الصفحة على اتصال بطيء. */
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  const networkPromise = fetch(request).then((response) => {
+    if (response?.ok) cache.put(request, response.clone());
     return response;
-  } catch (_) {
-    const cached = await caches.match(request);
-    if (cached) return cached;
-    /* v5: offline.html كان مُخزَّنًا مسبقًا (PAGES) لكنه لم يُستخدَم أبدًا فعليًا —
-       كان يُعاد نص HTML مُضمَّن بسيط بدلًا منه. الآن يُقدَّم فعليًا عند فشل الشبكة والكاش معًا. */
-    const offlinePage = await caches.match('./offline.html');
-    if (offlinePage) return offlinePage;
-    return new Response('<h1 dir="rtl">غير متصل</h1>', {
-      headers: { 'Content-Type': 'text/html;charset=utf-8' }
-    });
+  }).catch(() => null);
+
+  if (cached) {
+    const timeout = new Promise((resolve) => setTimeout(() => resolve(null), timeoutMs));
+    const winner = await Promise.race([networkPromise, timeout]);
+    if (winner) return winner;
+    networkPromise.then((fresh) => { /* استمرار التحديث في الخلفية حتى لو فاتته المهلة */ if (fresh) return fresh; });
+    return cached;
   }
+
+  const response = await networkPromise;
+  if (response) return response;
+  const offlinePage = await caches.match('./offline.html');
+  if (offlinePage) return offlinePage;
+  return new Response('<h1 dir="rtl">غير متصل</h1>', {
+    headers: { 'Content-Type': 'text/html;charset=utf-8' }
+  });
 }
 
 async function staleWhileRevalidate(request, cacheName) {

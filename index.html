@@ -18,7 +18,7 @@
 <meta name="mobile-web-app-capable" content="yes"/>
 
 <!-- SEO: تحسينات ميتا فقط — لا تأثير على أي كود وظيفي -->
-<meta name="description" content="استمع إلى القرآن الكريم مباشر بجودة عالية، إذاعات القرآن الكريم، تلاوات أشهر القراء، الأذكار، مواقيت الصلاة وبوصلة القبلة في مكان واحد."/>
+<meta name="description" content="استمع لإذاعات القرآن الكريم بثًا مباشرًا على مدار الساعة بأصوات أشهر القرّاء، وتابع مواقيت الصلاة بدقة حسب موقعك تلقائيًا، مع أذكار الصباح والمساء والسبحة الرقمية — كل ذلك في تطبيق ويب مجاني بالكامل يعمل من المتصفح فورًا بلا تحميل من أي متجر."/>
 <meta name="robots" content="index, follow"/>
 <meta name="author" content="خالد سامح"/>
 <link rel="canonical" href="https://qurankareem.live/"/>
@@ -42,43 +42,39 @@
 
 <!-- بيانات منظَّمة (Structured Data) لمساعدة محركات البحث على فهم طبيعة الموقع -->
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@graph": [
-    {
-      "@type": "WebSite",
-      "@id": "https://qurankareem.live/#website",
-      "url": "https://qurankareem.live/",
-      "name": "القرآن الكريم مباشر",
-      "description": "استمع إلى القرآن الكريم مباشر، إذاعات القرآن الكريم، تلاوات أشهر القراء، الأذكار، مواقيت الصلاة وبوصلة القبلة.",
-      "inLanguage": "ar"
+[
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "القرآن الكريم مباشر",
+    "url": "https://qurankareem.live/",
+    "inLanguage": "ar"
+  },
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "القرآن الكريم مباشر",
+    "url": "https://qurankareem.live/",
+    "description": "بث مباشر لإذاعات القرآن الكريم وأشهر القراء، مع مواقيت الصلاة، الأذكار، والسبحة الرقمية.",
+    "applicationCategory": "LifestyleApplication",
+    "operatingSystem": "Any",
+    "isAccessibleForFree": true,
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
     },
-    {
-      "@type": "WebApplication",
-      "@id": "https://qurankareem.live/#app",
-      "url": "https://qurankareem.live/",
-      "name": "القرآن الكريم مباشر",
-      "description": "استمع إلى القرآن الكريم مباشر بجودة عالية، إذاعات القرآن الكريم، تلاوات أشهر القراء، الأذكار، مواقيت الصلاة وبوصلة القبلة في مكان واحد.",
-      "applicationCategory": "LifestyleApplication",
-      "operatingSystem": "Android, iOS, Windows, macOS, Linux",
-      "browserRequirements": "Requires a modern web browser",
-      "inLanguage": "ar",
-      "isAccessibleForFree": true,
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "author": {
-        "@type": "Person",
-        "name": "خالد سامح"
-      },
-      "isPartOf": {
-        "@id": "https://qurankareem.live/#website"
-      }
+    "inLanguage": "ar",
+    "isPartOf": {
+      "@type": "WebSite",
+      "url": "https://qurankareem.live/"
+    },
+    "author": {
+      "@type": "Person",
+      "name": "خالد سامح"
     }
-  ]
-}
+  }
+]
 </script>
 
 <link rel="manifest" href="manifest.json"/>
@@ -91,7 +87,15 @@
 <link rel="apple-touch-icon" href="icon-180.png"/>
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<!-- v29: تحميل غير حاجب لعرض الصفحة (render-blocking) — بدل <link rel=stylesheet>
+     العادي اللي بيوقف أول عرض للصفحة لحد ما يوصل رد فونتس جوجل، بنحمّلها
+     بأولوية منخفضة (media=print يخلّيها مش حاجبة) وبنبدّلها للتفعيل الفعلي
+     بمجرد وصولها؛ <noscript> بيغطي حالة تعطيل JS. الخط الاحتياطي (fallback)
+     يظهر فورًا فـ"لا نص مخفي" إطلاقًا (--fu/--fd فيهم Cairo/Amiri أول تفضيل
+     ثم خطوط نظام عربية قياسية) — يتطابق تمامًا مع سلوك font-display:swap. -->
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap" media="print" onload="this.media='all'"/>
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@400;500;600;700&display=swap"/></noscript>
 
 <!-- v27: adhan.js مُستضاف محليًا (بدل CDN) — تحميل أسرع وأوثق (بلا اعتماد على طرف
      ثالث)، مع بقاء defer وبقاء التحقق الدفاعي typeof adhan في الكود كما هو.
@@ -597,8 +601,10 @@ function showPWAUpdateToast(worker){
 
 <!-- Prayer scripts: بعد app.js -->
 <script src="js/locationService.js" defer></script>
-<script src="js/qiblaService.js" defer></script>
-<script src="js/qiblaUI.js" defer></script>
+<!-- v29: بوصلة القبلة (qiblaService.js + qiblaUI.js، ~30KB) تُحمَّل عند أول ضغطة
+     فعلية على زر القبلة فقط (انظر ensureQiblaLoaded في app.js) — الميزة أقل
+     استخدامًا من مواقيت الصلاة نفسها، فلا داعٍ لتحميل وتفسير كودها لكل زائر
+     قبل ما يحتاجها فعليًا. -->
 <script src="js/prayerService.js" defer></script>
 <script src="js/ui.js" defer></script>
 <script src="js/ui-enhancements.js" defer></script>

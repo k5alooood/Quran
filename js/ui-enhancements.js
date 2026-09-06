@@ -37,11 +37,19 @@
     // مهم: يجب ضبط المتغيّر على <html> (جذر المستند) لا على #mini نفسه —
     // متغيّرات CSS تتوارث من الأصل إلى الأبناء فقط، وbody هو أصل لعنصر #mini
     // وليس العكس، فلو ضُبط على #mini لَما استطاع body أو .wrap قراءته أبدًا.
+    //
+    // v30: getBoundingClientRect() هنا كان بيسبب forced reflow (~105ms) لأنه كان
+    // بينفّذ فورًا وسط تحميل الصفحة، فيجبر المتصفح يفرّغ أي layout معلّق من كل
+    // السكريبتات التانية اللي بتشتغل في نفس اللحظة (تهيئة مواقيت الصلاة، إلخ)
+    // قبل ما يقدر يرجّع القياس. تأجيل القراءة بـ requestAnimationFrame بيخليها
+    // تحصل طبيعيًا بعد أول رسم للصفحة بدل ما تجبر عملية layout وسط التحميل.
     function setPlayerOffset() {
-      var nav = document.getElementById('bnav');
-      if (!nav) return;
-      var navH = nav.getBoundingClientRect().height;
-      document.documentElement.style.setProperty('--dock-height', Math.ceil(navH) + 'px');
+      requestAnimationFrame(function () {
+        var nav = document.getElementById('bnav');
+        if (!nav) return;
+        var navH = nav.getBoundingClientRect().height; // READ
+        document.documentElement.style.setProperty('--dock-height', Math.ceil(navH) + 'px'); // WRITE
+      });
     }
     setPlayerOffset();
     window.addEventListener('resize', setPlayerOffset, {passive:true});
