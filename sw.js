@@ -4,8 +4,8 @@
    bumped only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم. ضروري هذه المرة
    تحديدًا لأنه يحمل إصلاح خطأ توقيت الصلاة الجذري (فارق ساعات كامل) + إزالة قسم
    الخصوصية من الفوتر — يجب وصوله فعليًا لكل المستخدمين الحاليين فورًا) */
-const CACHE_S = 'quran-static-v5-r18';
-const CACHE_P = 'quran-pages-v5-r18';
+const CACHE_S = 'quran-static-v5-r19';
+const CACHE_P = 'quran-pages-v5-r19';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -47,6 +47,7 @@ function bypass(url) {
 }
 
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(Promise.all([
     caches.open(CACHE_S).then((cache) =>
       cache.addAll(PRECACHE).catch(() => {})
@@ -100,7 +101,7 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(cacheFirst(event.request, CACHE_S));
 });
 
-async function networkFirst(request, cacheName, timeoutMs = 1800) {
+async function networkFirst(request, cacheName, timeoutMs = 8000) {
   /* v29: سباق بمهلة — لو الشبكة بطيئة (مش معطوبة تمامًا)، منستنّاش أكتر من
      المهلة المحددة قبل ما نرجّع أي نسخة مخزّنة صالحة فورًا؛ الطلب الشبكي
      يكمل في الخلفية ويحدّث الكاش لأي زيارة تالية. بيحافظ على قصد "الأحدث
