@@ -1,5 +1,6 @@
 'use strict';
-const QiblaService = require('/home/claude/quran_work/js/qiblaService.js');
+const path = require('path');
+const QiblaService = require(path.join(__dirname, '..', 'qiblaService.js'));
 
 let pass = 0, fail = 0;
 function assertClose(actual, expected, tol, label) {

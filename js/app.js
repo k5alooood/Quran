@@ -240,7 +240,11 @@ function renderCatSelect(){
   EL.catPills.innerHTML='';
   CATS.forEach(function(c){
     var btn=document.createElement('button');
-    btn.className='cat-pill'+(c===activeCat?' cat-pill--active':'');
+    var active=c===activeCat;
+    btn.className='cat-pill'+(active?' cat-pill--active':'');
+    btn.type='button';
+    btn.setAttribute('role','tab'); /* v30: أبناء عنصر role=tablist لازم يكون لهم role=tab صريح */
+    btn.setAttribute('aria-selected',active?'true':'false');
     btn.textContent=c;btn.dataset.cat=c;
     EL.catPills.appendChild(btn);
   });
@@ -538,7 +542,15 @@ function drawVol(){
 function drawTasbeeh(animate){
   var pct=tbTarget>0?(tbCount%tbTarget)/tbTarget:0;
   if(tbTarget>0&&tbCount>0&&tbCount%tbTarget===0)pct=1;
-  if(EL.tbArc){EL.tbArc.style.strokeDasharray=TB_CIRC;EL.tbArc.style.strokeDashoffset=TB_CIRC*(1-pct);}
+  if(EL.tbArc){
+    /* v30: تجنّب حركة stroke-dashoffset (غير قابلة للتركيب على GPU) وقت التحميل
+       الأولي/الاستعادة من التخزين المحلي — بيبان في قياسات الأداء كأنها "حركة"
+       شغالة وقت تحميل الصفحة رغم إنها مجرد استعادة قيمة محفوظة. التبديل السلس
+       (transition) يفضل شغال بس لما المستخدم يدوس فعليًا على السبحة. */
+    EL.tbArc.style.transition=animate?'':'none';
+    EL.tbArc.style.strokeDasharray=TB_CIRC;
+    EL.tbArc.style.strokeDashoffset=TB_CIRC*(1-pct);
+  }
   if(EL.tbFill)EL.tbFill.style.width=(pct*100).toFixed(1)+'%';
   if(EL.tbNum)EL.tbNum.textContent=toAr(tbCount);
   var mile=MILESTONES[tbCount];

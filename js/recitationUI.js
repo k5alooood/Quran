@@ -79,7 +79,7 @@ const RecitationUI = (function(){
     if(!el.pills)return;
     el.pills.innerHTML = riwayatList.map(function(r){
       var active = String(r.id)===String(selectedRiwayahId);
-      return '<button type="button" class="cat-pill'+(active?' cat-pill--active':'')+'" data-id="'+r.id+'">'+esc(r.name)+'</button>';
+      return '<button type="button" role="tab" aria-selected="'+(active?'true':'false')+'" class="cat-pill'+(active?' cat-pill--active':'')+'" data-id="'+r.id+'">'+esc(r.name)+'</button>';
     }).join('');
   }
 

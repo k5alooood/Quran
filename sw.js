@@ -1,11 +1,11 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.2 (QA pass 2: internal cache buster
+/* Quran Kareem Direct — Service Worker v5.3 (final update reliability: cache buster
    bumped only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم. ضروري هذه المرة
    تحديدًا لأنه يحمل إصلاح خطأ توقيت الصلاة الجذري (فارق ساعات كامل) + إزالة قسم
    الخصوصية من الفوتر — يجب وصوله فعليًا لكل المستخدمين الحاليين فورًا) */
-const CACHE_S = 'quran-static-v5-r19';
-const CACHE_P = 'quran-pages-v5-r19';
+const CACHE_S = 'quran-static-v5-r20';
+const CACHE_P = 'quran-pages-v5-r20';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -108,7 +108,7 @@ async function networkFirst(request, cacheName, timeoutMs = 8000) {
      دايمًا" بدون ما يوقّف عرض الصفحة على اتصال بطيء. */
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const networkPromise = fetch(request).then((response) => {
+  const networkPromise = fetch(new Request(request, { cache: 'no-store' })).then((response) => {
     if (response?.ok) cache.put(request, response.clone());
     return response;
   }).catch(() => null);
