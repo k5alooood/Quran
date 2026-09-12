@@ -480,7 +480,9 @@ const PrayerUI = (() => {
       renderHTML(makePrayerCardHTML(prayers, next, { ...loc, countryCode: loc.country }, isFallback, manId));
       startCountdown(next);
       bindHandlers({
-        onRefresh: () => init(true),
+        /* ضغطة زر "تحديث الموقع" هي بالتحديد الإيماءة الصريحة من المستخدم اللي
+           تبرِّر طلب إذن GPS — v5.4 PageSpeed review */
+        onRefresh: () => init(true, true),
         onManual: () => {
           const selId = 'ptSel_' + Date.now();
           renderHTML(makeManualHTML(selId));
@@ -503,10 +505,10 @@ const PrayerUI = (() => {
   /* ══════════════════════════════════════════════════
      init — نقطة الدخول الرئيسية
   ══════════════════════════════════════════════════ */
-  const init = async (forceRefresh = false) => {
+  const init = async (forceRefresh = false, allowGPS = false) => {
     renderHTML(skeletonHTML());
     try {
-      locationData = await LocationService.detect(forceRefresh);
+      locationData = await LocationService.detect(forceRefresh, allowGPS);
       /* v5: LocationService.detect() لا يرفض (reject) أبدًا — فحتى عند تعذّر GPS وIP معًا
          يُرجع موقع مكة الافتراضي مع src:'fallback' بدل رمي استثناء. لذلك يجب التحقق من
          هذا العلم مباشرة هنا بدل انتظار خطأ لن يُطرح أبدًا (وهو ما كان يجعل واجهة اختيار
@@ -522,7 +524,9 @@ const PrayerUI = (() => {
       renderHTML(makePrayerCardHTML(prayers, next, locationData, isFallback, manId));
       startCountdown(next);
       bindHandlers({
-        onRefresh: () => init(true),
+        /* ضغطة زر "تحديث الموقع" هي بالتحديد الإيماءة الصريحة من المستخدم اللي
+           تبرِّر طلب إذن GPS — v5.4 PageSpeed review */
+        onRefresh: () => init(true, true),
         onManual: () => {
           const selId = 'ptSel_' + Date.now();
           renderHTML(makeManualHTML(selId));
@@ -549,7 +553,8 @@ const PrayerUI = (() => {
       } else {
         const eid = 'ptErr_' + Date.now();
         renderHTML(makeErrorHTML('تعذّر تحديد الموقع أو جلب المواقيت', eid));
-        bindHandlers({ onRetry: () => init(true) });
+        /* إعادة المحاولة بعد فشل تحديد الموقع = ضغطة مستخدم صريحة، فيصح فيها GPS */
+        bindHandlers({ onRetry: () => init(true, true) });
       }
     }
   };

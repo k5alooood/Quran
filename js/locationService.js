@@ -77,7 +77,15 @@ const LocationService = (() => {
     throw new Error('ip_all_failed');
   };
 
-  const detect = async (forceRefresh = false) => {
+  /* v5.4 (PageSpeed review): فصل "تجاوز الكاش" (forceRefresh) عن "الإذن بطلب GPS"
+     (allowGPS) — دي كانت نفس المتغيّر غلط، فكان أي تحديث تلقائي (فتح الصفحة أول
+     مرة، أو إعادة الحساب التلقائية بعد كل أذان) بيحاول GPS الأول ويطلع نافذة إذن
+     الموقع من المتصفح بدون أي ضغطة من المستخدم — وده بالظبط اللي رصدته PageSpeed
+     Insights (geolocation-on-start). allowGPS الافتراضي false: يعني المسار الصامت
+     (تحميل الصفحة، إعادة الحساب الدورية) يعتمد على IP فقط من غير أي نافذة إذن.
+     GPS (اللي فعلاً بيطلع نافذة الإذن) بقى مربوط فقط بالأماكن اللي فيها ضغطة
+     مستخدم حقيقية (زر "تحديث الموقع" أو "إعادة المحاولة" في ui.js). */
+  const detect = async (forceRefresh = false, allowGPS = false) => {
     if (!forceRefresh) {
       const hit = getCache();
       if (hit) return hit;
@@ -85,20 +93,24 @@ const LocationService = (() => {
 
     let result;
 
-    // 1. Try GPS + reverse geocode
-    try {
-      const { lat, lon, accuracy } = await fromGPS();
-      const geo = await reverseGeocode(lat, lon);
-      result = {
-        lat, lon, accuracy,
-        city: geo.city,
-        country: geo.country,
-        countryCode: geo.countryCode,
-        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-        src: 'gps',
-      };
-    } catch {
-      // 2. Try IP geolocation
+    // 1. Try GPS + reverse geocode — فقط لو المستخدم ضغط فعليًا على زر يطلب دقة أعلى
+    if (allowGPS) {
+      try {
+        const { lat, lon, accuracy } = await fromGPS();
+        const geo = await reverseGeocode(lat, lon);
+        result = {
+          lat, lon, accuracy,
+          city: geo.city,
+          country: geo.country,
+          countryCode: geo.countryCode,
+          timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+          src: 'gps',
+        };
+      } catch { /* يكمل على IP بالأسفل */ }
+    }
+
+    if (!result) {
+      // 2. Try IP geolocation (صامت — لا يطلب أي إذن من المتصفح)
       try {
         result = await fromIP();
       } catch {

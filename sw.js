@@ -1,16 +1,16 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.3 (r21: senior review of the SW update
-   architecture — see engineering report for full analysis. Real behavioral change
-   in this revision: networkFirst's fetch() now sets {cache:'no-cache'} so a stale
-   browser HTTP disk-cache entry can never silently satisfy it without a real
-   revalidation round-trip to the server — this is the actual fix for "incognito
-   shows new, normal browser shows old". skipWaiting() remains user-triggered only
-   (via the existing update toast + postMessage), never automatic on install — see
-   report for why. Cache buster bump only — لا علاقة له برقم إصدار التطبيق الظاهر
-   للمستخدم.) */
-const CACHE_S = 'quran-static-v5-r21';
-const CACHE_P = 'quran-pages-v5-r21';
+/* Quran Kareem Direct — Service Worker v5.4 (r22: PageSpeed Insights review on top
+   of the r21 SW-update-architecture review. Two real Best Practices fixes shipped
+   in the surrounding app files this round — see engineering report: (1) reg.update()
+   in index.html now has its own .catch(), fixing an unhandled-promise-rejection
+   console error; (2) LocationService.detect()/PrayerUI.init() no longer request GPS
+   permission automatically on page load — GPS is now gated behind a real user click
+   (refresh/retry buttons), silent IP-based location is used for every automatic/
+   background refresh. r21's fetch({cache:'no-cache'}) fix is unchanged. Cache buster
+   bump only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم.) */
+const CACHE_S = 'quran-static-v5-r22';
+const CACHE_P = 'quran-pages-v5-r22';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',

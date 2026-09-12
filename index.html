@@ -573,7 +573,14 @@
 <script>
 if('serviceWorker' in navigator){
   window.addEventListener('load',function(){
-    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){reg.update();
+    navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){
+      /* v5.4 PageSpeed review: reg.update() بيرجّع Promise منفصل عن سلسلة register()
+         نفسها — لو فشل فحص التحديث (شبكة بطيئة، Throttling، إلخ) كان بيطلع كخطأ غير
+         مُعالَج في الـconsole مباشرة (unhandled rejection)، وده بالظبط اللي رصدته
+         PageSpeed Insights: "Failed to update a ServiceWorker... unknown error".
+         الإصلاح: .catch() صامت هنا فقط — فشل فحص تحديث خلفي عابر مش خطأ حقيقي يستحق
+         تسجيله، وأصلاً reg.update() نفسها استدعاء fire-and-forget من الأساس. */
+      reg.update().catch(function(){});
       reg.addEventListener('updatefound',function(){
         var w=reg.installing;
         w.addEventListener('statechange',function(){
