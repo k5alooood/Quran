@@ -26,6 +26,25 @@ const RecitationUI = (function(){
   var vol = 100;
   var muted = false;
 
+  /* v5.5 (PageSpeed review): تقرير PageSpeed الثاني كشف إن العدد الإجمالي لعناصر
+     DOM قفز من 431 إلى 2,940 عنصر (عنصر واحد وصل لـ241 ابنًا) — السبب: renderReciters()
+     كانت بتبني كل القرّاء (مئات العناصر من mp3quran.net) وrenderSurahs() كل الـ114
+     سورة في الـDOM تلقائيًا عند تحميل الصفحة، حتى لو المستخدم مفتحش قسم "التلاوات"
+     خالص وهو نازل ودّي بعيد في الصفحة. ده رفع LCP لـ5.3 ثانية. الحل: نفس نمط التحميل
+     المؤجَّل المستخدَم بالفعل في bootstrap القبلة (app.js) — بناء القائمتين التقيلتين
+     دول بس أول ما القسم يبقى فعليًا مرئي (IntersectionObserver) أو أول تفاعل حقيقي
+     معاه (بحث/ضغط قارئ). باقي init() (جلب الروايات، استعادة آخر حالة تشغيل، ربط
+     أزرار المشغل، مؤشر المشغل المصغّر) فضل زي ما هو تمامًا بلا أي تأخير — عشان مايتأثرش
+     استمرار تشغيل آخر سورة كانت شغّالة ولا مؤشرات المشغل المصغّر. */
+  var sectionRevealed = false;
+  var pendingRenders = [];
+  function revealSection(){
+    if(sectionRevealed) return;
+    sectionRevealed = true;
+    var fns = pendingRenders; pendingRenders = [];
+    fns.forEach(function(fn){ fn(); });
+  }
+
   var STORAGE_KEY = 'qr_recite_state';
 
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){}}
@@ -104,6 +123,11 @@ const RecitationUI = (function(){
 
   /* ═══ قائمة القرّاء ═══ */
   function renderReciters(){
+    if(!sectionRevealed){
+      pendingRenders.push(renderReciters);
+      if(el.recitersList) el.recitersList.innerHTML = skeletonList(6);
+      return;
+    }
     var list = recitersList;
     if(recSearchQ){
       var q = recSearchQ.trim();
@@ -150,6 +174,10 @@ const RecitationUI = (function(){
 
   /* ═══ قائمة السور ═══ */
   function renderSurahs(){
+    if(!sectionRevealed){
+      pendingRenders.push(renderSurahs);
+      return;
+    }
     var ids = [];
     for(var i=1;i<=114;i++){
       if(!availableSurahIds || availableSurahIds.indexOf(i)!==-1) ids.push(i);
@@ -452,6 +480,22 @@ const RecitationUI = (function(){
       miniSt: g('miniSt')
     };
     if(!audio || !el.pills) return; // القسم غير موجود في الصفحة
+
+    /* v5.5: كشف ظهور القسم فعليًا — أو تدهور رشيق (تنفيذ فوري كالسابق تمامًا)
+       لو IntersectionObserver غير مدعوم. رابط شريط التنقّل السفلي [data-target=
+       "reciteCard"] بيعمل smooth-scroll فوريًا، فالمراقب هيلحقه بلا أي فرق محسوس. */
+    var reciteCardEl = document.getElementById('reciteCard');
+    if('IntersectionObserver' in window && reciteCardEl){
+      var io = new IntersectionObserver(function(entries){
+        if(entries.some(function(en){return en.isIntersecting;})){
+          io.disconnect();
+          revealSection();
+        }
+      }, {rootMargin:'200px'});
+      io.observe(reciteCardEl);
+    } else {
+      revealSection();
+    }
 
     bindAudio();
 

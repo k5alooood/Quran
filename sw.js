@@ -1,16 +1,16 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.4 (r22: PageSpeed Insights review on top
-   of the r21 SW-update-architecture review. Two real Best Practices fixes shipped
-   in the surrounding app files this round — see engineering report: (1) reg.update()
-   in index.html now has its own .catch(), fixing an unhandled-promise-rejection
-   console error; (2) LocationService.detect()/PrayerUI.init() no longer request GPS
-   permission automatically on page load — GPS is now gated behind a real user click
-   (refresh/retry buttons), silent IP-based location is used for every automatic/
-   background refresh. r21's fetch({cache:'no-cache'}) fix is unchanged. Cache buster
-   bump only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم.) */
-const CACHE_S = 'quran-static-v5-r22';
-const CACHE_P = 'quran-pages-v5-r22';
+/* Quran Kareem Direct — Service Worker v5.5 (r23: PageSpeed follow-up #2. Second
+   report revealed the r22 fix (no auto-GPS-prompt) unblocked Lighthouse enough to
+   finally measure real LCP (5.3s) — which exposed a pre-existing bug: recitationUI.js
+   was eagerly building the FULL reciters list (hundreds of items) + all 114 surahs
+   into the DOM on every page load regardless of whether the user ever opened that
+   section, ballooning total DOM nodes from 431 to 2,940. Fixed with an
+   IntersectionObserver-gated deferred render (same lazy pattern already used for
+   Qibla bootstrap) — see engineering report. Cache buster bump only — لا علاقة له
+   برقم إصدار التطبيق الظاهر للمستخدم.) */
+const CACHE_S = 'quran-static-v5-r23';
+const CACHE_P = 'quran-pages-v5-r23';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
