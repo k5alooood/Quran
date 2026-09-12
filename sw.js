@@ -1,11 +1,16 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.3 (final update reliability: cache buster
-   bumped only — لا علاقة له برقم إصدار التطبيق الظاهر للمستخدم. ضروري هذه المرة
-   تحديدًا لأنه يحمل إصلاح خطأ توقيت الصلاة الجذري (فارق ساعات كامل) + إزالة قسم
-   الخصوصية من الفوتر — يجب وصوله فعليًا لكل المستخدمين الحاليين فورًا) */
-const CACHE_S = 'quran-static-v5-r20';
-const CACHE_P = 'quran-pages-v5-r20';
+/* Quran Kareem Direct — Service Worker v5.3 (r21: senior review of the SW update
+   architecture — see engineering report for full analysis. Real behavioral change
+   in this revision: networkFirst's fetch() now sets {cache:'no-cache'} so a stale
+   browser HTTP disk-cache entry can never silently satisfy it without a real
+   revalidation round-trip to the server — this is the actual fix for "incognito
+   shows new, normal browser shows old". skipWaiting() remains user-triggered only
+   (via the existing update toast + postMessage), never automatic on install — see
+   report for why. Cache buster bump only — لا علاقة له برقم إصدار التطبيق الظاهر
+   للمستخدم.) */
+const CACHE_S = 'quran-static-v5-r21';
+const CACHE_P = 'quran-pages-v5-r21';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -47,7 +52,6 @@ function bypass(url) {
 }
 
 self.addEventListener('install', (event) => {
-  self.skipWaiting();
   event.waitUntil(Promise.all([
     caches.open(CACHE_S).then((cache) =>
       cache.addAll(PRECACHE).catch(() => {})
@@ -101,14 +105,25 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(cacheFirst(event.request, CACHE_S));
 });
 
-async function networkFirst(request, cacheName, timeoutMs = 8000) {
+async function networkFirst(request, cacheName, timeoutMs = 1800) {
   /* v29: سباق بمهلة — لو الشبكة بطيئة (مش معطوبة تمامًا)، منستنّاش أكتر من
      المهلة المحددة قبل ما نرجّع أي نسخة مخزّنة صالحة فورًا؛ الطلب الشبكي
      يكمل في الخلفية ويحدّث الكاش لأي زيارة تالية. بيحافظ على قصد "الأحدث
-     دايمًا" بدون ما يوقّف عرض الصفحة على اتصال بطيء. */
+     دايمًا" بدون ما يوقّف عرض الصفحة على اتصال بطيء.
+     v20-review: fetch مع {cache:'no-cache'} — يجبر الشبكة على *مراجعة*
+     الخادم دائمًا (conditional request بـETag/Last-Modified) بدل ما يقبل
+     نسخة من الـHTTP disk cache للمتصفح بلا أي اتصال فعلي بالسيرفر. ده هو
+     السبب الحقيقي لمشكلة "التصفح المتخفي يعرض نسخة جديدة والعادي يعرض
+     نسخة قديمة": صفحات GitHub Pages بتُخزَّن بـETag قوي، والمتصفح العادي
+     ممكن يشبع طلب fetch() بالكامل من القرص دون أي طلب شبكي حقيقي، فتفشل
+     استراتيجية networkFirst في تحقيق قصدها الأساسي. no-cache (مش
+     no-store) مقصودة: تضمن نفس الأمان (مراجعة فعلية مع الخادم في كل مرة)
+     لكن تسمح برد 304 خفيف عند عدم التغيير بدل تنزيل الملف كاملًا من
+     الصفر في كل تحميل صفحة — أوفر بيانات وأسرع من no-store دون أي تضحية
+     في الصحة. */
   const cache = await caches.open(cacheName);
   const cached = await cache.match(request);
-  const networkPromise = fetch(new Request(request, { cache: 'no-store' })).then((response) => {
+  const networkPromise = fetch(new Request(request, { cache: 'no-cache' })).then((response) => {
     if (response?.ok) cache.put(request, response.clone());
     return response;
   }).catch(() => null);
