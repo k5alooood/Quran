@@ -1,20 +1,21 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.6 (r24: PageSpeed follow-up #3 — the real
-   root cause of the intermittent "Error! NO_LCP" seen across all 3 reports. Fixed in
-   index.html, not here, but bumping the cache buster since it's a real behavioral fix
-   that must reach every visitor: clients.claim() in this file's activate handler
-   (kept below, still correct/needed) fires controllerchange even on a client's very
-   FIRST-ever activation (no prior controller) — index.html's naive reload-on-
-   controllerchange was treating that first activation as "an update happened,
-   reload", forcing an unnecessary full-page reload on every first-time visitor mid-
-   load. That's what was racing against and sometimes breaking Lighthouse's LCP/TBT
-   trace, and would be a jarring reload for real first-time users too. index.html now
-   tracks whether a controller already existed before registration and only reloads
-   on a genuine subsequent update. Cache buster bump only — لا علاقة له برقم إصدار
-   التطبيق الظاهر للمستخدم.) */
-const CACHE_S = 'quran-static-v5-r24';
-const CACHE_P = 'quran-pages-v5-r24';
+/* Quran Kareem Direct — Service Worker v5.7 (r25: PageSpeed follow-up #4 — LCP is
+   now stably measured (3.9s, no more NO_LCP), confirming r24's controllerchange fix
+   worked. Remaining real console error found: ipapi.co returned 429 Too Many
+   Requests during the audit — locationService.js's IP-geolocation fallback chain
+   already recovers automatically via its next provider, but the browser's own
+   "Failed to load resource" console log for the failed 429 fires regardless of
+   that recovery (unavoidable from JS). Fixed in locationService.js by reordering
+   the fallback chain — ipwho.is first, ipapi.co demoted to last resort — since
+   ipapi.co is the one demonstrably hitting its free-tier rate limit under real
+   traffic. Every other remaining item in the report (cache lifetimes, forced
+   reflow, network dependency tree, render-blocking, unminified JS) is confirmed
+   non-scoring "Insight" content, explicitly labelled by the report itself as not
+   contributing to the category score. Cache buster bump only — لا علاقة له برقم
+   إصدار التطبيق الظاهر للمستخدم.) */
+const CACHE_S = 'quran-static-v5-r25';
+const CACHE_P = 'quran-pages-v5-r25';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',

@@ -49,10 +49,21 @@ const LocationService = (() => {
   };
 
   const fromIP = async () => {
+    /* v5.7 (PageSpeed review #4): errors-in-console رصد فشل حقيقي —
+       "ipapi.co/json/: 429 Too Many Requests". السلسلة هنا أصلًا مصمَّمة للتعافي
+       التلقائي (لو مصدر فشل تجرّب التالي)، لكن رسالة "Failed to load resource"
+       بتاعة المتصفح نفسه بتتسجّل في الـconsole بمجرد رجوع أي حالة HTTP فاشلة —
+       سواء كودنا تعافى منها بعد كده ولا لأ، ومفيش أي try/catch في JS يقدر يمنع
+       المتصفح من تسجيلها. يعني الحل الوحيد الحقيقي هو تقليل احتمال إن أول محاولة
+       تفشل من الأساس، مش معالجة الفشل بعد ما يحصل. ipapi.co تحديدًا معروف بحد
+       طلبات صارم على الخطة المجانية غير الموثَّقة بيتفعّل بسرعة مع أي عنوان IP
+       مشترك (زي بنية اختبار PageSpeed نفسها، أو أي حركة زوار مكثّفة) — نزّلته من
+       أول محاولة لتالت واحدة، وقدّمت ipwho.is (بلا حد معروف بنفس الصرامة) كأول
+       محاولة بدلًا منه. */
     const endpoints = [
-      { url: 'https://ipapi.co/json/', map: d => ({ lat: d.latitude, lon: d.longitude, city: d.city, country: d.country_name, cc: d.country_code, tz: d.timezone }) },
       { url: 'https://ipwho.is/',      map: d => ({ lat: d.latitude, lon: d.longitude, city: d.city, country: d.country, cc: d.country_code, tz: d.timezone }) },
       { url: 'https://ip-api.com/json/?fields=status,country,countryCode,city,lat,lon,timezone', map: d => ({ lat: d.lat, lon: d.lon, city: d.city, country: d.country, cc: d.countryCode, tz: d.timezone }) },
+      { url: 'https://ipapi.co/json/', map: d => ({ lat: d.latitude, lon: d.longitude, city: d.city, country: d.country_name, cc: d.country_code, tz: d.timezone }) },
     ];
     for (const ep of endpoints) {
       try {
