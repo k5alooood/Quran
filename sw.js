@@ -1,16 +1,20 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.5 (r23: PageSpeed follow-up #2. Second
-   report revealed the r22 fix (no auto-GPS-prompt) unblocked Lighthouse enough to
-   finally measure real LCP (5.3s) — which exposed a pre-existing bug: recitationUI.js
-   was eagerly building the FULL reciters list (hundreds of items) + all 114 surahs
-   into the DOM on every page load regardless of whether the user ever opened that
-   section, ballooning total DOM nodes from 431 to 2,940. Fixed with an
-   IntersectionObserver-gated deferred render (same lazy pattern already used for
-   Qibla bootstrap) — see engineering report. Cache buster bump only — لا علاقة له
-   برقم إصدار التطبيق الظاهر للمستخدم.) */
-const CACHE_S = 'quran-static-v5-r23';
-const CACHE_P = 'quran-pages-v5-r23';
+/* Quran Kareem Direct — Service Worker v5.6 (r24: PageSpeed follow-up #3 — the real
+   root cause of the intermittent "Error! NO_LCP" seen across all 3 reports. Fixed in
+   index.html, not here, but bumping the cache buster since it's a real behavioral fix
+   that must reach every visitor: clients.claim() in this file's activate handler
+   (kept below, still correct/needed) fires controllerchange even on a client's very
+   FIRST-ever activation (no prior controller) — index.html's naive reload-on-
+   controllerchange was treating that first activation as "an update happened,
+   reload", forcing an unnecessary full-page reload on every first-time visitor mid-
+   load. That's what was racing against and sometimes breaking Lighthouse's LCP/TBT
+   trace, and would be a jarring reload for real first-time users too. index.html now
+   tracks whether a controller already existed before registration and only reloads
+   on a genuine subsequent update. Cache buster bump only — لا علاقة له برقم إصدار
+   التطبيق الظاهر للمستخدم.) */
+const CACHE_S = 'quran-static-v5-r24';
+const CACHE_P = 'quran-pages-v5-r24';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',

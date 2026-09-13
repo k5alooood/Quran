@@ -572,6 +572,21 @@
 <!-- Service Worker -->
 <script>
 if('serviceWorker' in navigator){
+  /* v5.6 (PageSpeed review #3 — deep root cause):
+     التقارير كانت بتفشل بشكل متقطّع في قياس LCP/TBT (Error! NO_LCP) — مش بسبب حاجة
+     في التلاوات ولا الموقع، لكن بسبب سباق زمني في هذا الكود نفسه: self.clients.claim()
+     في activate بتاع الـService Worker (سطر مقصود ومطلوب لباقي السيناريوهات) بيُطلق
+     حدث controllerchange حتى في *أول تفعيل على الإطلاق* — يعني أول زيارة للمستخدم،
+     لمّا navigator.serviceWorker.controller كان null قبلها بلحظات وبقى Worker جديد
+     فجأة. الكود القديم كان بيعتبر أي controllerchange = "تحديث حقيقي، أعِد التحميل"،
+     فكان بيعمل reload() غير ضروري لكل زائر جديد تمامًا وسط تحميل الصفحة الأولى —
+     وهو بالظبط اللي كان بيقطع قياس Lighthouse أحيانًا (حسب توقيت السباق بين تفعيل
+     الـSW واكتمال قياس LCP)، وكان بيسبب نفس التجربة المزعجة لزائر حقيقي بيشوف
+     صفحته بتعيد التحميل من غير أي سبب. الإصلاح المعياري (موصى به من web.dev/
+     Workbox لنفس المشكلة تحديدًا): تسجيل هل كان فيه Controller *قبل* التسجيل أصلًا؛
+     لو لأ (يعني ده أول تفعيل)، نتجاهل أول controllerchange ونعتبره خط الأساس بدل
+     إعادة تحميل، وأي controllerchange بعد كده فعلاً تحديث حقيقي فيستأهل reload(). */
+  var hadController = !!navigator.serviceWorker.controller;
   window.addEventListener('load',function(){
     navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(function(reg){
       /* v5.4 PageSpeed review: reg.update() بيرجّع Promise منفصل عن سلسلة register()
@@ -590,7 +605,12 @@ if('serviceWorker' in navigator){
     }).catch(function(){});
   });
   var refreshing=false;
-  navigator.serviceWorker.addEventListener('controllerchange',function(){if(!refreshing){refreshing=true;window.location.reload();}});
+  navigator.serviceWorker.addEventListener('controllerchange',function(){
+    if(refreshing) return;
+    if(!hadController){ hadController=true; return; } // أول تفعيل على الإطلاق — ليس تحديثًا
+    refreshing=true;
+    window.location.reload();
+  });
 }
 function showPWAUpdateToast(worker){
   var old=document.getElementById('pwaUpdateToast');if(old)old.remove();
