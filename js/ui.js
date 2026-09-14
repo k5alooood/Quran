@@ -70,6 +70,12 @@ const PrayerUI = (() => {
 
   const getCountryAr = cc => COUNTRY_AR[cc] || locationData?.country || cc || '';
 
+  /* يُهرِب أي نص خارجي (مثل اسم المدينة/الدولة القادم من خدمات الموقع الخارجية)
+     قبل إدراجه ضمن قالب HTML عبر innerHTML، لمنع XSS دون التأثير على الوسم الثابت */
+  const escapeHTML = str => String(str).replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+
   /* ══════════════════════════════════════════════════
      قائمة المدن (للاختيار اليدوي)
   ══════════════════════════════════════════════════ */
@@ -217,8 +223,8 @@ const PrayerUI = (() => {
   /* Prayer card (main) */
   const makePrayerCardHTML = (prayers, next, loc, isFallback, manualBtnId) => {
     const flag        = getFlagEmoji(loc?.countryCode || '');
-    const countryAr   = getCountryAr(loc?.countryCode || '');
-    const city        = loc?.city || '';
+    const countryAr   = escapeHTML(getCountryAr(loc?.countryCode || ''));
+    const city        = escapeHTML(loc?.city || '');
     const methodLabel = prayers[0]?.method || 'مواقيت الصلاة';
 
     return `
