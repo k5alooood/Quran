@@ -3,21 +3,6 @@
 const PrayerService = (() => {
   const CACHE_KEY = 'qr_prayers_v3';
 
-  // Method names displayed in Arabic (user-facing)
-  const METHOD_LABELS = {
-    UmmAlQura:              'أم القرى',
-    Egyptian:               'مصر والشام',
-    Tehran:                 'طهران',
-    Turkey:                 'تركيا',
-    Karachi:                'كراتشي',
-    MoonsightingCommittee:  'الهلال',
-    MWL:                    'رابطة العالم الإسلامي',
-    NorthAmerica:           'أمريكا الشمالية',
-    Singapore:              'سنغافورة',
-    Dubai:                  'الإمارات',
-    Kuwait:                 'الكويت',
-    Qatar:                  'قطر',
-  };
 
   /* v5.1 — إصلاح جذري لخطأ حساب مواقيت الصلاة في الخليج:
      كانت كل دول الخليج (بما فيها الإمارات والكويت وقطر) تُحسَب بطريقة "أم القرى" حرفيًا،

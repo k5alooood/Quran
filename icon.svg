@@ -1,45 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="القرآن الكريم مباشر">
   <defs>
-    <radialGradient id="bg" cx="50%" cy="40%" r="60%">
-      <stop offset="0%" stop-color="#0d2318"/>
-      <stop offset="100%" stop-color="#06150e"/>
-    </radialGradient>
-    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f0d06a"/>
-      <stop offset="100%" stop-color="#d4af37"/>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1c1a13"/><stop offset="1" stop-color="#0e0d0a"/>
     </linearGradient>
-    <linearGradient id="goldSoft" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f0d06a"/>
-      <stop offset="100%" stop-color="#b8892a"/>
+    <radialGradient id="glow" cx="50%" cy="38%" r="55%">
+      <stop offset="0" stop-color="#d4af37" stop-opacity=".22"/><stop offset="1" stop-color="#d4af37" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0d27a"/><stop offset="1" stop-color="#c79a2a"/>
+    </linearGradient>
+    <linearGradient id="goldR" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#e6c76a"/><stop offset="1" stop-color="#b98a22"/>
     </linearGradient>
   </defs>
-
-  <rect width="512" height="512" rx="96" fill="url(#bg)"/>
-
-  <circle cx="256" cy="256" r="210" fill="none" stroke="url(#gold)" stroke-width="2" opacity=".22"/>
-  <circle cx="256" cy="256" r="175" fill="none" stroke="url(#gold)" stroke-width="1.5" opacity=".15"/>
-
-  <path d="M256 74 C168 74 108 156 108 250 C108 344 168 426 256 426 C182 396 138 336 138 250 C138 164 182 104 256 74Z" fill="url(#gold)" opacity=".10"/>
-
-  <path d="M164 234 C164 198 194 168 230 168" fill="none" stroke="url(#gold)" stroke-width="10" stroke-linecap="round" opacity=".85"/>
-  <path d="M140 234 C140 182 182 140 230 140" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" opacity=".5"/>
-  <path d="M116 234 C116 166 166 116 230 116" fill="none" stroke="url(#gold)" stroke-width="4.5" stroke-linecap="round" opacity=".28"/>
-
-  <path d="M348 234 C348 198 318 168 282 168" fill="none" stroke="url(#gold)" stroke-width="10" stroke-linecap="round" opacity=".85"/>
-  <path d="M372 234 C372 182 330 140 282 140" fill="none" stroke="url(#gold)" stroke-width="7" stroke-linecap="round" opacity=".5"/>
-  <path d="M396 234 C396 166 346 116 282 116" fill="none" stroke="url(#gold)" stroke-width="4.5" stroke-linecap="round" opacity=".28"/>
-
-  <g>
-    <path d="M256 214 C222 196 182 194 150 208 C144 210 140 216 140 222 L140 318 C140 326 148 331 156 328 C186 317 222 318 256 336 Z" fill="url(#gold)"/>
-    <path d="M256 214 C290 196 330 194 362 208 C368 210 372 216 372 222 L372 318 C372 326 364 331 356 328 C326 317 290 318 256 336 Z" fill="url(#goldSoft)"/>
-    <path d="M256 214 L256 336" stroke="#3a2a08" stroke-width="3" opacity=".35"/>
-    <path d="M168 236 L232 226 M168 254 L232 246 M168 272 L226 266" stroke="#3a2a08" stroke-width="3" stroke-linecap="round" opacity=".3"/>
-    <path d="M344 236 L280 226 M344 254 L280 246 M344 272 L286 266" stroke="#3a2a08" stroke-width="3" stroke-linecap="round" opacity=".3"/>
+  <rect width="512" height="512" rx="112" fill="url(#bg)"/><rect width="512" height="512" rx="112" fill="url(#glow)"/>
+  <g transform="translate(256 262) scale(1.08) translate(-256 -262)">
+  <g fill="none" stroke="url(#gold)" stroke-linecap="round">
+    <path d="M205 214 A62 62 0 0 1 307 214" stroke-width="15"/>
+    <path d="M178 192 A104 104 0 0 1 334 192" stroke-width="12" opacity=".7"/>
+    <path d="M152 170 A146 146 0 0 1 360 170" stroke-width="9" opacity=".4"/>
   </g>
-
-  <circle cx="256" cy="378" r="15" fill="url(#gold)" opacity=".9"/>
-  <circle cx="210" cy="392" r="9" fill="url(#gold)" opacity=".55"/>
-  <circle cx="302" cy="392" r="9" fill="url(#gold)" opacity=".55"/>
-
-  <path d="M368 130 L374 146 L392 146 L378 156 L384 172 L368 162 L352 172 L358 156 L344 146 L362 146Z" fill="url(#gold)" opacity=".38"/>
+  <circle cx="256" cy="262" r="13" fill="url(#gold)"/>
+  <path d="M252 306 C220 284 176 282 138 296 L138 390 C176 376 220 378 252 398 Z" fill="url(#gold)"/>
+  <path d="M260 306 C292 284 336 282 374 296 L374 390 C336 376 292 378 260 398 Z" fill="url(#goldR)"/>
+  </g>
 </svg>

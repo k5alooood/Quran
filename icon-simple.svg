@@ -1,17 +1,14 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="القرآن الكريم مباشر">
   <defs>
-    <radialGradient id="bgS" cx="50%" cy="40%" r="65%">
-      <stop offset="0%" stop-color="#0d2318"/>
-      <stop offset="100%" stop-color="#06150e"/>
-    </radialGradient>
-    <linearGradient id="goldS" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#f0d06a"/>
-      <stop offset="100%" stop-color="#d4af37"/>
-    </linearGradient>
+    <linearGradient id="bgS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c1a13"/><stop offset="1" stop-color="#0e0d0a"/></linearGradient>
+    <linearGradient id="goldS" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f0d27a"/><stop offset="1" stop-color="#c79a2a"/></linearGradient>
   </defs>
   <rect width="64" height="64" rx="14" fill="url(#bgS)"/>
-  <!-- كتاب مبسّط وجريء يقرأ بوضوح حتى في 16×16 -->
-  <path d="M32 22c-6-4-13-4.5-19-2v22c6-2.5 13-2 19 2Z" fill="url(#goldS)"/>
-  <path d="M32 22c6-4 13-4.5 19-2v22c-6-2.5-13-2-19 2Z" fill="url(#goldS)" opacity=".72"/>
-  <rect x="30.6" y="21" width="2.8" height="25" fill="#0d2318" opacity=".55"/>
+  <g fill="none" stroke="url(#goldS)" stroke-linecap="round">
+    <path d="M24.5 27a10 10 0 0 1 15 0" stroke-width="3.2"/>
+    <path d="M19.5 22a17 17 0 0 1 25 0" stroke-width="3" opacity=".6"/>
+  </g>
+  <circle cx="32" cy="29.5" r="2.6" fill="url(#goldS)"/>
+  <path d="M31 35c-5-3.2-11-3.6-17-1.4v17.4c6-2 12-1.6 17 1.6Z" fill="url(#goldS)"/>
+  <path d="M33 35c5-3.2 11-3.6 17-1.4v17.4c-6-2-12-1.6-17 1.6Z" fill="url(#goldS)" opacity=".8"/>
 </svg>
