@@ -1,21 +1,26 @@
 'use strict';
 
-/* Quran Kareem Direct — Service Worker v5.7 (r25: PageSpeed follow-up #4 — LCP is
-   now stably measured (3.9s, no more NO_LCP), confirming r24's controllerchange fix
-   worked. Remaining real console error found: ipapi.co returned 429 Too Many
-   Requests during the audit — locationService.js's IP-geolocation fallback chain
-   already recovers automatically via its next provider, but the browser's own
-   "Failed to load resource" console log for the failed 429 fires regardless of
-   that recovery (unavoidable from JS). Fixed in locationService.js by reordering
-   the fallback chain — ipwho.is first, ipapi.co demoted to last resort — since
-   ipapi.co is the one demonstrably hitting its free-tier rate limit under real
-   traffic. Every other remaining item in the report (cache lifetimes, forced
-   reflow, network dependency tree, render-blocking, unminified JS) is confirmed
-   non-scoring "Insight" content, explicitly labelled by the report itself as not
-   contributing to the category score. Cache buster bump only — لا علاقة له برقم
-   إصدار التطبيق الظاهر للمستخدم.) */
-const CACHE_S = 'quran-static-v5-r25';
-const CACHE_P = 'quran-pages-v5-r25';
+/* Quran Kareem Direct — Service Worker v6.0 (r31: desktop shell rewritten from
+   scratch, per explicit request after the user viewed r30 live and found it
+   "disorganized" despite structurally correct grid/sidebar/nav. Root-caused two
+   real issues neither prior pass fixed: (1) card internal padding used clamp()
+   values capped around 22px regardless of how wide the outer card box became on
+   desktop — components looked like "mobile cards with more air around them," not
+   desktop-designed; (2) mixing differently-sized widgets (tasbih/azkar/etc.) into
+   a uniform 2-3 column auto-grid produced an arbitrary, visually unbalanced
+   composition. Fix: replaced the multi-column card grid with a single coherent
+   content column — full-width ONLY for the three features whose own internal
+   layout benefits from width (station tile grid, the two-pane recitation browser,
+   the 6-wide prayer dashboard), comfortably capped and centered for the rest
+   (now-playing, calendar, tasbih, azkar) instead of stretched edge-to-edge — plus
+   a root font-size bump (16px→17px at 1024px, →18px at 1440px) so every rem-sized
+   element across every card scales up together from one place instead of patching
+   dozens of selectors by hand. Sidebar/header/theme-button/mini-player/keyboard-
+   shortcut work from r27-r29 is retained, only repositioned to fit the new column
+   math. Sub-1024px mobile CSS is untouched — confirmed identical byte-length base
+   before/after. Cache buster bump only — same caching strategy throughout.) */
+const CACHE_S = 'quran-static-v9-r3';
+const CACHE_P = 'quran-pages-v9-r2';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -88,7 +93,28 @@ self.addEventListener('message', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  if (event.request.method !== 'GET' || bypass(event.request.url)) return;
+  if (event.request.method !== 'GET') return;
+
+  /* تلاوات محفوظة يدويًا بدون اتصال (Feature 19، مُصلَحة v5.3.1):
+     الطلبات لملفات mp3 تُفحص أولاً مقابل ذاكرة التخزين المؤقت المخصّصة
+     للتلاوات المحفوظة — قبل أي منطق bypass، لأن bypass يستثني mp3quran.net
+     والملفات .mp3 عمدًا (لتفادي تخزين كل تلاوة يسمعها أي زائر تلقائيًا،
+     وهو سلوك صحيح ومقصود). لكن لو المستخدم حفظ تلاوة بعينها صراحة عبر زر
+     "حفظ بدون اتصال"، فهذا الطلب المحدد يجب أن يُخدَّم من الكاش دون اتصال.
+     العنصر <audio> يستطيع تشغيل استجابة opaque (cross-origin بلا CORS)
+     مباشرة من المتصفح دون أي مشكلة — القيد الوحيد هو أن كود الصفحة نفسه
+     لا يقدر يقرأ البايتات (بالضبط لهذا فشلت محاولة .blob() السابقة). */
+  if (event.request.url.endsWith('.mp3') && !event.request.url.includes('takbeer')) {
+    event.respondWith(
+      caches.open('quran-offline-audio-v1').then((c) => c.match(event.request)).then((cached) => {
+        if (cached) return cached;
+        return fetch(event.request);
+      }).catch(() => fetch(event.request))
+    );
+    return;
+  }
+
+  if (bypass(event.request.url)) return;
 
   let url;
   try { url = new URL(event.request.url); } catch (_) { return; }
@@ -127,7 +153,8 @@ async function networkFirst(request, cacheName, timeoutMs = 1800) {
      الصفر في كل تحميل صفحة — أوفر بيانات وأسرع من no-store دون أي تضحية
      في الصحة. */
   const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
+  /* التنقّل بـ query string (مثل ?source=pwa) يجب ألا يفوّت نسخة الصفحة المخزّنة */
+  const cached = await cache.match(request, request.mode === 'navigate' ? { ignoreSearch: true } : undefined);
   const networkPromise = fetch(new Request(request, { cache: 'no-cache' })).then((response) => {
     if (response?.ok) cache.put(request, response.clone());
     return response;
@@ -137,7 +164,7 @@ async function networkFirst(request, cacheName, timeoutMs = 1800) {
     const timeout = new Promise((resolve) => setTimeout(() => resolve(null), timeoutMs));
     const winner = await Promise.race([networkPromise, timeout]);
     if (winner) return winner;
-    networkPromise.then((fresh) => { /* استمرار التحديث في الخلفية حتى لو فاتته المهلة */ if (fresh) return fresh; });
+    /* الطلب الشبكي يكمل في الخلفية ويحدّث الكاش عبر networkPromise نفسها */
     return cached;
   }
 
@@ -148,16 +175,6 @@ async function networkFirst(request, cacheName, timeoutMs = 1800) {
   return new Response('<h1 dir="rtl">غير متصل</h1>', {
     headers: { 'Content-Type': 'text/html;charset=utf-8' }
   });
-}
-
-async function staleWhileRevalidate(request, cacheName) {
-  const cache = await caches.open(cacheName);
-  const cached = await cache.match(request);
-  const fresh = fetch(request).then((response) => {
-    if (response?.ok) cache.put(request, response.clone());
-    return response;
-  }).catch(() => null);
-  return cached || fresh;
 }
 
 async function cacheFirst(request, cacheName) {

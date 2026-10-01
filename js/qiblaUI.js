@@ -356,7 +356,7 @@ const QiblaUI = (() => {
     }
 
     /* إن لم تصل أي قراءة خلال مهلة معقولة، الجهاز غالبًا لا يوفّر بوصلة فعلية قابلة للاستخدام */
-    sensorTimeoutId = setTimeout(() => { if (!hasFirstReading) setState('error-sensor'); }, 3000);
+    sensorTimeoutId = setTimeout(() => { if (!hasFirstReading) { stopSensors(); setState('error-sensor'); } }, 3000);
 
     startRenderLoop();
   };

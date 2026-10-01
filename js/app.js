@@ -70,11 +70,11 @@ var AR='٠١٢٣٤٥٦٧٨٩';
 /* — audio: المتغير المباشر كما في v6 — */
 var audio=document.getElementById('audioEl');
 var hlsInst=null;
-var isPlaying=false,isLoading=false,muted=false,vol=80,theme='dark';
+var isPlaying=false,isLoading=false,muted=false,vol=80,theme='dark',themeMode='manual';
 var currentSt=null,retryCount=0,usingBk=false,wantPlaying=false,bgRetryTmr=null,bnavCtl=null;
 var retryTmr=null,stallTmr=null,silenceTmr=null,tbFlashTmr=null;
 var fadeTimer=null,statusTimer=null;
-var focusOn=false,ignSrc=false,preloaded=false;
+var focusOn=false,ignSrc=false;
 var activeCat='الكل',favIds=new Set();
 var stSearchQuery='';
 var tbCount=0,tbTarget=99;
@@ -103,13 +103,13 @@ var EL={
   npCard:g('npCard'),npSlab:g('npSlab'),npStation:g('npStation'),npTitle:g('npTitle'),
   viz:g('viz'),spwrap:g('spwrap'),ewrap:g('ewrap'),emsg:g('emsg'),rbtn:g('rbtn'),
   strow:g('strow'),sttxt:g('sttxt'),
-  pbtn:g('pbtn'),mbtn:g('mbtn'),fpbtn:g('fpbtn'),
+  pbtn:g('pbtn'),mbtn:g('mbtn'),fpbtn:g('fpbtn'),miniPrevBtn:g('miniPrevBtn'),miniNextBtn:g('miniNextBtn'),
   mini:g('mini'),miniTitle:g('miniTitle'),miniSt:g('miniSt'),
   fst:g('fst'),fdiv:g('fdiv'),fexit:g('fexit'),focusbtn:g('focusbtn'),
-  sharebtn:g('sharebtn'),thbtn:g('thbtn'),thbtnLabel:g('thbtnLabel'),
+  sharebtn:g('sharebtn'),thbtn:g('thbtn'),thbtnLabel:g('thbtnLabel'),dThemeBtn:g('dThemeBtn'),
   menuBtn:g('menuBtn'),appMenu:g('appMenu'),
   vrow:g('vrow'),mutebtn:g('mutebtn'),vslider:g('vslider'),vpct:g('vpct'),
-  catPills:g('catPills'),stList:g('stList'),stSearch:g('stSearch'),
+  catPills:g('catPills'),stList:g('stList'),stSearch:g('stSearch'),favList:g('favList'),
   tbTap:g('tbTap'),tbRst:g('tbRst'),tbNum:g('tbNum'),tbArc:g('tbArc'),
   tbFill:g('tbFill'),tbMile:g('tbMile'),tbTargetBtn:g('tbTargetBtn'),tbTargetNum:g('tbTargetNum'),
   tbFlash:g('tbFlash'),tbFlashMsg:g('tbFlashMsg'),
@@ -128,6 +128,7 @@ function init(){
   calInterval=setInterval(updateCalendar,3600000);
   renderCatSelect();
   renderStations();
+  renderFavorites();
   bindAudio();
   bindUI();
   setupObserver();
@@ -199,7 +200,16 @@ function setStatus(type,msg,autohide){
 function loadPrefs(){
   var sv=parseInt(lg('qr_vol'),10);if(!isNaN(sv))vol=Math.max(0,Math.min(100,sv));
   muted=lg('qr_muted')==='1';
-  theme=lg('qr_theme')||'dark';
+  themeMode=lg('qr_theme_mode');
+  if(themeMode!=='system'&&themeMode!=='manual')themeMode=lg('qr_theme')?'manual':'system';
+  if(themeMode==='system'&&window.matchMedia){
+    var mq=window.matchMedia('(prefers-color-scheme: dark)');
+    theme=mq.matches?'dark':'light';
+    if(mq.addEventListener)mq.addEventListener('change',function(e){if(themeMode==='system')applyTheme(e.matches?'dark':'light',false);});
+  }else{
+    var savedTheme=lg('qr_theme');
+    theme=(savedTheme==='light'||savedTheme==='dark')?savedTheme:'dark';
+  }
   tbCount=parseInt(lg('qr_tb'),10)||0;
   tbTarget=parseInt(lg('qr_tgt'),10)||99;
   var fav=lg('qr_favs');if(fav){try{favIds=new Set(JSON.parse(fav))}catch(e){}}
@@ -224,12 +234,34 @@ function loadPrefs(){
 function saveFavs(){ls('qr_favs',JSON.stringify(Array.from(favIds)))}
 function saveAzProg(){ls('qr_azprog',JSON.stringify(azProg))}
 function applyTheme(t,save){
+  if(t!=='dark'&&t!=='light')t='dark';
   theme=t;EL.html.setAttribute('data-theme',t);
-  if(EL.themeColorMeta)EL.themeColorMeta.setAttribute('content',t==='dark'?'#06150e':'#faf7f0');
+  if(EL.themeColorMeta)EL.themeColorMeta.setAttribute('content',t==='dark'?'#0e0d0a':'#f0f1ee');
   /* عنوان عنصر القائمة يصف الإجراء القادم: في الوضع الداكن يظهر "الوضع الفاتح" والعكس */
   if(EL.thbtnLabel)EL.thbtnLabel.textContent=t==='dark'?'الوضع الفاتح':'الوضع الداكن';
   if(EL.thbtn)EL.thbtn.setAttribute('aria-pressed',t==='light'?'true':'false');
-  if(save)ls('qr_theme',t);
+  if(EL.dThemeBtn)EL.dThemeBtn.setAttribute('aria-pressed',t==='light'?'true':'false');
+  if(save){themeMode='manual';ls('qr_theme_mode','manual');ls('qr_theme',t);}
+  syncSettingsThemeUI();
+}
+function setThemeMode(mode){
+  themeMode=mode;ls('qr_theme_mode',mode);
+  if(mode==='system'){
+    try{localStorage.removeItem('qr_theme');}catch(e){}
+    var mq=window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)');
+    applyTheme((mq&&mq.matches)?'dark':'light',false);
+  }else{
+    syncSettingsThemeUI();
+  }
+}
+function syncSettingsThemeUI(){
+  if(!EL.stgThemeBtns)return;
+  EL.stgThemeBtns.forEach(function(b){
+    var m=b.dataset.mode;
+    var active=(m==='system'&&themeMode==='system')||(m===theme&&themeMode==='manual');
+    b.classList.toggle('active',active);
+    b.setAttribute('aria-pressed',active?'true':'false');
+  });
 }
 
 /* ═══════════════════════════════════════════
@@ -265,17 +297,10 @@ function getStIcon(st){
   return '<div class="st-icon st-icon--svg">'+svg+'</div>';
 }
 
-function renderStations(){
-  if(!EL.stList)return;
-  var list=STATIONS;
-  if(activeCat==='المفضلة')list=STATIONS.filter(function(s){return favIds.has(s.id)});
-  else if(activeCat!=='الكل')list=STATIONS.filter(function(s){return s.cat===activeCat});
-  if(stSearchQuery){
-    var q=stSearchQuery.trim().toLowerCase();
-    list=list.filter(function(s){return s.name.toLowerCase().indexOf(q)!==-1;});
-  }
-  if(!list.length){EL.stList.innerHTML='<p class="no-results">لا توجد إذاعات مطابقة</p>';return;}
-  EL.stList.innerHTML='';
+function renderStationList(container,list,emptyMsg){
+  if(!container)return;
+  if(!list.length){container.innerHTML='<p class="no-results">'+emptyMsg+'</p>';return;}
+  container.innerHTML='';
   list.forEach(function(st,idx){
     var isFav=favIds.has(st.id),isActive=currentSt&&currentSt.id===st.id,isPlay=isActive&&isPlaying;
     var div=document.createElement('div');
@@ -291,13 +316,29 @@ function renderStations(){
     div.addEventListener('click',function(e){if(e.target.closest('.st-fav'))return;playStation(st);});
     div.querySelector('.st-fav').addEventListener('click',function(e){e.stopPropagation();toggleFav(st.id,this);});
     div.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();playStation(st);}});
-    EL.stList.appendChild(div);
+    container.appendChild(div);
   });
+}
+function renderFavorites(){
+  if(!EL.favList)return;
+  renderStationList(EL.favList,STATIONS.filter(function(s){return favIds.has(s.id);}),'لا توجد إذاعات في المفضلة بعد — اضغط أيقونة النجمة على أي إذاعة لإضافتها هنا');
+}
+function renderStations(){
+  if(!EL.stList)return;
+  var list=STATIONS;
+  if(activeCat==='المفضلة')list=STATIONS.filter(function(s){return favIds.has(s.id)});
+  else if(activeCat!=='الكل')list=STATIONS.filter(function(s){return s.cat===activeCat});
+  if(stSearchQuery){
+    var q=stSearchQuery.trim().toLowerCase();
+    list=list.filter(function(s){return s.name.toLowerCase().indexOf(q)!==-1;});
+  }
+  renderStationList(EL.stList,list,'لا توجد إذاعات مطابقة');
 }
 function toggleFav(id,btn){
   if(favIds.has(id)){favIds.delete(id);btn.classList.remove('saved');btn.setAttribute('aria-label','إضافة للمفضلة');btn.querySelector('svg').setAttribute('fill','none');}
   else{favIds.add(id);btn.classList.add('saved');btn.setAttribute('aria-label','إزالة من المفضلة');btn.querySelector('svg').setAttribute('fill','currentColor');}
   saveFavs();if(activeCat==='المفضلة')renderStations();
+  renderFavorites();
 }
 
 /* ═══════════════════════════════════════════
@@ -314,6 +355,9 @@ function fadeAudio(targetVol,duration,onDone){
 
 function playStation(st){
   if(!st)return;
+  if(window.RecitationUI && window.RecitationUI.isPlaying && window.RecitationUI.isPlaying()){
+    window.RecitationUI.pause();
+  }
   document.querySelectorAll('.st-item').forEach(function(d){d.classList.remove('active','playing');});
   var targetEl=EL.stList?EL.stList.querySelector('[data-id="'+st.id+'"]'):null;
   if(targetEl){targetEl.classList.add('active');targetEl.scrollIntoView({behavior:'smooth',block:'nearest'});}
@@ -467,6 +511,8 @@ function togglePlay(){
    RENDER — v6 exact
 ═══════════════════════════════════════════ */
 function render(state){
+  var heroTxt=document.getElementById('heroLiveTxt');
+  if(heroTxt)heroTxt.textContent=state==='playing'?'بث مباشر':'جاهز للاستماع';
   h(EL.viz,true);h(EL.spwrap,true);h(EL.ewrap,true);if(EL.viz)EL.viz.classList.remove('on');
   if(EL.npSlab)EL.npSlab.className='np-slab';
   if(EL.strow)EL.strow.className='strow';
@@ -559,7 +605,7 @@ function drawTasbeeh(animate){
 }
 function incTasbeeh(){
   tbCount++;var mile=MILESTONES[tbCount];
-  if(mile){showFlash(mile);if(navigator.vibrate)navigator.vibrate([80,40,80,40,120]);}
+  if(mile&&!(tbTarget>0&&tbCount===tbTarget)){showFlash(mile);if(navigator.vibrate)navigator.vibrate([80,40,80,40,120]);}
   else{if(navigator.vibrate)navigator.vibrate(18);}
   if(tbTarget>0&&tbCount===tbTarget){
     showFlash('تَمَّ الْهَدَفُ 🌟\n'+toAr(tbTarget)+' تسبيحة');
@@ -663,8 +709,17 @@ function setupBnav(){
   if(!targets.length)return;
 
   function setActive(link){
-    items.forEach(function(a){a.classList.remove('active');a.removeAttribute('aria-current');});
-    link.classList.add('active');link.setAttribute('aria-current','page');
+    /* v5.8 (desktop shell): قد يوجد أكتر من عنصر تنقّل بنفس data-target الآن (شريط
+       الجوال السفلي + الشريط الجانبي لسطح المكتب، كلاهما بكلاس .bnav-item نفسه
+       عمدًا حتى يشتغلوا بنفس هذا الكود بلا أي تكرار منطقي). التفعيل لازم يتزامن
+       على *كل* العناصر اللي ليها نفس data-target مش بس اللي اتنادى عليه مباشرة،
+       وإلا هيفضل شريط واحد بس (أيًّا كان اللي جه أول مرة في ترتيب DOM) هو اللي
+       بيتحدّث فعليًا، والتاني هيتجمّد على أول حالة أبدًا مايتحرك. */
+    var targetId=link.dataset.target;
+    items.forEach(function(a){
+      if(a.dataset.target===targetId){a.classList.add('active');a.setAttribute('aria-current','page');}
+      else{a.classList.remove('active');a.removeAttribute('aria-current');}
+    });
   }
 
   var observerSuspended=false,resumeTimer=null;
@@ -778,6 +833,16 @@ function bindUI(){
       togglePlay();
     }
   });
+  /* v5.11 (desktop player bar): السابق/التالي مفهوم خاص بالتلاوات فقط (للإذاعة
+     مفيش "قائمة تشغيل" أصلًا). playAdjacent() الداخلية جوه RecitationUI بترجع
+     فورًا (no-op) لو مفيش قارئ محدَّد، فالاستدعاء آمن دايمًا حتى لو الإذاعة هي
+     المصدر النشط — نفس نمط زر mbtn بالظبط، من غير أي تكرار منطق. */
+  if(EL.miniPrevBtn)EL.miniPrevBtn.addEventListener('click',function(){
+    if(window.RecitationUI&&window.RecitationUI.prev)window.RecitationUI.prev();
+  });
+  if(EL.miniNextBtn)EL.miniNextBtn.addEventListener('click',function(){
+    if(window.RecitationUI&&window.RecitationUI.next)window.RecitationUI.next();
+  });
   if(EL.fpbtn)EL.fpbtn.addEventListener('click',togglePlay);
   if(EL.rbtn)EL.rbtn.addEventListener('click',manualRetry);
   var debouncedRenderStations=debounce(renderStations,150);
@@ -787,6 +852,36 @@ function bindUI(){
     if(EL.mutebtn)EL.mutebtn.addEventListener('click',toggleMute);
   }
   if(EL.thbtn)EL.thbtn.addEventListener('click',function(){applyTheme(theme==='dark'?'light':'dark',true);});
+  if(EL.dThemeBtn)EL.dThemeBtn.addEventListener('click',function(){applyTheme(theme==='dark'?'light':'dark',true);});
+  /* ⚙️ شاشة الإعدادات — مظهر (نظام/فاتح/داكن) */
+  EL.stgThemeBtns=Array.prototype.slice.call(document.querySelectorAll('.stg-theme-btn'));
+  EL.stgThemeBtns.forEach(function(b){
+    b.addEventListener('click',function(){
+      var m=b.dataset.mode;
+      if(m==='system')setThemeMode('system');
+      else applyTheme(m,true);
+    });
+  });
+  syncSettingsThemeUI();
+  /* ⚙️ تثبيت التطبيق من شاشة الإعدادات — تستدعي نفس منطق التثبيت الحقيقي */
+  var stgInstallBtn=g('stgInstallBtn');
+  if(stgInstallBtn){
+    if(window.QuranPWAInstall&&window.QuranPWAInstall.isInstalled()){
+      stgInstallBtn.textContent='التطبيق مثبّت بالفعل';
+      stgInstallBtn.disabled=true;
+    }else{
+      stgInstallBtn.addEventListener('click',function(){
+        if(window.QuranPWAInstall)window.QuranPWAInstall.showManual();
+      });
+    }
+  }
+  /* ⚙️ إعادة تعيين بيانات التطبيق (المفضلة، السبحة، الأذكار، التفضيلات) */
+  var stgResetBtn=g('stgResetBtn');
+  if(stgResetBtn)stgResetBtn.addEventListener('click',function(){
+    if(!window.confirm('سيتم مسح المفضلة، عداد السبحة، تقدّم الأذكار، والتفضيلات المحفوظة على هذا الجهاز. متابعة؟'))return;
+    ['qr_favs','qr_tb','qr_tgt','qr_azprog','qr_azdate','qr_vol','qr_muted','qr_theme','qr_theme_mode','qr_last'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+    window.location.reload();
+  });
   if(EL.focusbtn)EL.focusbtn.addEventListener('click',enterFocus);
   if(EL.fexit)EL.fexit.addEventListener('click',exitFocus);
   if(EL.sharebtn)EL.sharebtn.addEventListener('click',shareApp);
@@ -832,17 +927,28 @@ function bindUI(){
     });
   }
 
-  /* Preload */
-  function preload(){if(!preloaded){audio.load();preloaded=true;}}
-  document.addEventListener('touchstart',preload,{once:true,passive:true});
-  document.addEventListener('click',preload,{once:true});
 
   /* Keyboard */
   document.addEventListener('keydown',function(e){
     if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
     if(e.key==='Escape'&&focusOn)exitFocus();
-    if(e.code==='Space'){e.preventDefault();togglePlay();}
+    if(e.code==='Space'){
+      e.preventDefault();
+      /* v5.11: نفس إصلاح v27 لزر mbtn — لازم نوجّه لمصدر الصوت النشط فعليًا، مش
+         الإذاعة دايمًا، وإلا كان اختصار المسافة بيوقف/يشغّل الإذاعة حتى لو
+         التلاوة هي اللي شغّالة فعلًا. */
+      if(window.__activeAudioSource==='recite'&&window.RecitationUI&&window.RecitationUI.toggle){
+        window.RecitationUI.toggle();
+      } else {
+        togglePlay();
+      }
+    }
     if(e.code==='KeyM'&&!isIOS){toggleMute();}
+    /* اختصارات لوحة المفاتيح الإضافية لسطح المكتب فقط — لا تؤثر على تجربة اللمس */
+    if(window.matchMedia('(min-width:1024px)').matches){
+      if(e.key===']'&&window.RecitationUI&&window.RecitationUI.next)window.RecitationUI.next();
+      if(e.key==='['&&window.RecitationUI&&window.RecitationUI.prev)window.RecitationUI.prev();
+    }
   });
 }
 

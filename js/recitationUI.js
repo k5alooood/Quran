@@ -144,9 +144,10 @@ const RecitationUI = (function(){
       div.setAttribute('role','listitem');
       div.tabIndex=0;
       div.style.animationDelay=(idx*25)+'ms';
+      var initial = esc(String(r.name||'ق').trim().charAt(0));
       div.innerHTML =
-        '<div class="st-icon" aria-hidden="true">'+
-          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 2a4 4 0 0 1 4 4v5a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/><path d="M19 11a7 7 0 0 1-14 0"/><line x1="12" y1="18" x2="12" y2="22"/></svg>'+
+        '<div class="st-icon st-icon--avatar" aria-hidden="true">'+
+          '<span class="rc-initial">'+initial+'</span>'+
         '</div>'+
         '<div class="st-info"><div class="st-name">'+esc(r.name)+'</div></div>';
       div.addEventListener('click', function(){openReciter(r);});
@@ -218,9 +219,15 @@ const RecitationUI = (function(){
     }
   }
 
-  /* ═══ حفظ التلاوة للاستماع بدون اتصال (Feature 19) ═══
-     يستخدم Cache Storage API مباشرة من الصفحة (بلا حاجة لتدخل Service Worker)،
-     ثم عند التشغيل نحوّل الاستجابة المخزَّنة إلى blob URL لتشغيلها فعليًا دون اتصال. */
+  /* ═══ حفظ التلاوة للاستماع بدون اتصال (Feature 19، أُصلحت v5.3.1) ═══
+     الحفظ والحذف والتحقق من الوجود يستخدمون Cache Storage API مباشرة من
+     الصفحة كما كان. لكن التشغيل الفعلي لا يمر عبر .blob()/createObjectURL
+     بعد الآن — تحقّقت تجريبيًا (بيئة اختبار حقيقية بمصدر عابر للنطاق بلا
+     CORS) أن استدعاء .blob() على استجابة opaque يُرجع دائمًا Blob بحجم
+     صفر مهما نجحت كل الخطوات السابقة بلا أخطاء — قيد حقيقي في المنصة نفسها
+     وليس خطأ في هذا الكود. الإصلاح الصحيح: عنصر <audio> يستطيع تشغيل
+     استجابة opaque مباشرة إذا خدمها Service Worker (انظر sw.js)، فبات
+     التشغيل يستخدم الرابط الأصلي مباشرة بدل أي تحويل. */
   var OFFLINE_CACHE = 'quran-offline-audio-v1';
   function offlineSupported(){ return typeof caches!=='undefined'; }
   function isSavedOffline(url){
@@ -236,13 +243,6 @@ const RecitationUI = (function(){
   function removeOffline(url){
     if(!offlineSupported()) return Promise.resolve(false);
     return caches.open(OFFLINE_CACHE).then(function(c){return c.delete(url);}).catch(function(){return false;});
-  }
-  function resolvePlaybackSrc(url){
-    if(!offlineSupported()) return Promise.resolve(url);
-    return caches.open(OFFLINE_CACHE).then(function(c){return c.match(url);}).then(function(m){
-      if(!m) return url;
-      return m.blob().then(function(b){return URL.createObjectURL(b);}).catch(function(){return url;});
-    }).catch(function(){return url;});
   }
   function updateOfflineBtnUI(url){
     if(!el.offlineBtn) return;
@@ -263,12 +263,9 @@ const RecitationUI = (function(){
     stopRadioIfPlaying();
     currentSurahNum = num;
     var url = RecitationService.audioUrl(selectedMoshaf, num);
-    if(audio.src && audio.src.indexOf('blob:')===0){try{URL.revokeObjectURL(audio.src);}catch(e){}}
-    resolvePlaybackSrc(url).then(function(src){
-      audio.src = src;
-      audio.currentTime = resumeTime>0 ? resumeTime : 0;
-      audio.play().catch(function(){});
-    });
+    audio.src = url;
+    audio.currentTime = resumeTime>0 ? resumeTime : 0;
+    audio.play().catch(function(){});
     if(el.downloadBtn){el.downloadBtn.href=url;el.downloadBtn.setAttribute('download','سورة '+RecitationService.surahName(num)+' - '+(selectedReciter?selectedReciter.name:'')+'.mp3');}
     updateOfflineBtnUI(url);
     updateNowPlaying();
@@ -428,7 +425,8 @@ const RecitationUI = (function(){
     if(st.surahNum>0 && selectedMoshaf){
       currentSurahNum = st.surahNum;
       var url = RecitationService.audioUrl(selectedMoshaf, st.surahNum);
-      resolvePlaybackSrc(url).then(function(src){ audio.src = src; audio.currentTime = st.time||0; });
+      audio.src = url;
+      audio.currentTime = st.time||0;
       if(el.downloadBtn){el.downloadBtn.href=url;el.downloadBtn.setAttribute('download','سورة '+RecitationService.surahName(st.surahNum)+'.mp3');}
       updateOfflineBtnUI(url);
       updateNowPlaying();
@@ -443,6 +441,8 @@ const RecitationUI = (function(){
     selectedRiwayahId = st.riwayahId;
     RecitationService.loadReciters(st.riwayahId).then(function(list){
       recitersList = list;
+      renderRiwayatPills();
+      renderReciters();
       applyRestoredReciterState(st, list);
     }).catch(function(){});
   }
@@ -584,7 +584,12 @@ const RecitationUI = (function(){
   var publicApi = {
     pause: pause,
     isPlaying: isPlaying,
-    toggle: togglePlayPause
+    toggle: togglePlayPause,
+    /* v5.11 (desktop player bar): يعيدان استخدام playAdjacent() نفسها اللي بيستخدمها
+       #rcPrevBtn/#rcNextBtn بالفعل — بترجع بأمان (no-op) لو مفيش قارئ محدَّد أصلًا،
+       فآمن استدعاؤها من المشغّل العائم المشترك حتى لو الإذاعة هي المصدر النشط. */
+    next: function(){ playAdjacent(1); },
+    prev: function(){ playAdjacent(-1); }
   };
   window.RecitationUI = publicApi;
   return publicApi;

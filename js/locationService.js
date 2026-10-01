@@ -108,12 +108,14 @@ const LocationService = (() => {
     if (allowGPS) {
       try {
         const { lat, lon, accuracy } = await fromGPS();
-        const geo = await reverseGeocode(lat, lon);
+        /* فشل reverse-geocode (Nominatim) لا يجب أن يُسقط إحداثيات GPS الناجحة */
+        let geo = {};
+        try { geo = (await reverseGeocode(lat, lon)) || {}; } catch { geo = {}; }
         result = {
           lat, lon, accuracy,
-          city: geo.city,
-          country: geo.country,
-          countryCode: geo.countryCode,
+          city: geo.city || '',
+          country: geo.country || '',
+          countryCode: geo.countryCode || '',
           timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
           src: 'gps',
         };

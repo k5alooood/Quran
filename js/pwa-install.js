@@ -5,7 +5,7 @@
   let deferredPrompt = null;
   let manualMode = false;
   const KEY = 'quran-pwa-install-dismissed-v24';
-  const DAY = 24 * 60 * 60 * 1000;
+  const DAY = 14 * 24 * 60 * 60 * 1000; /* فترة احترام الإغلاق: 14 يومًا (كانت يومًا واحدًا — مزعجة) */
   const $ = (id) => document.getElementById(id);
 
   const promptEl = () => $('pwaInstallPrompt');
@@ -129,6 +129,23 @@
           true
         );
       }
-    }, 2400);
+    }, 15000); /* لا نقاطع المستخدم في أول ثوانٍ؛ نمنحه وقتًا للاستماع أولًا */
   });
+
+  /* واجهة عامة صغيرة تسمح لشاشة الإعدادات بإعادة استدعاء نفس منطق التثبيت
+     الحقيقي (نفس الشرط: تثبيت أصلي إن كان متاحًا، وإلا نفس إرشاد iOS/Android
+     اليدوي المستخدم تلقائيًا) — لا منطق تثبيت جديد، فقط نقطة استدعاء يدوية. */
+  window.QuranPWAInstall = {
+    isInstalled: isStandalone,
+    showManual: function () {
+      if (isStandalone()) return false;
+      if (deferredPrompt) { handleInstallClick(); return true; }
+      if (isIOS) {
+        showPrompt('ثبّت القرآن الكريم', 'اضغط مشاركة ثم «إضافة إلى الشاشة الرئيسية» للوصول إليه مثل أي تطبيق.', 'طريقة التثبيت', true);
+      } else {
+        showPrompt('ثبّت القرآن الكريم', 'أضفه إلى الشاشة الرئيسية للاستماع بشكل أسرع وأسهل.', 'طريقة التثبيت', true);
+      }
+      return true;
+    }
+  };
 })();

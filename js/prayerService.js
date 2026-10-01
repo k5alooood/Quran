@@ -233,8 +233,11 @@ const PrayerService = (() => {
       }
       const naiveUTC = Date.UTC(y, mo - 1, day, h, m); // "h:m" وكأنها UTC حرفيًا (خطوة وسيطة فقط)
       try {
-        const offsetMin = getTzOffsetMinutes(tz, new Date(naiveUTC));
-        return new Date(naiveUTC - offsetMin * 60000);
+        /* التقاء تكراري: الإزاحة تُحسب عند اللحظة الفعلية (وليس عند "h:m كأنها UTC")
+           حتى لا يحدث خطأ ساعة قرب حدود التوقيت الصيفي */
+        let ts = naiveUTC - getTzOffsetMinutes(tz, new Date(naiveUTC)) * 60000;
+        ts = naiveUTC - getTzOffsetMinutes(tz, new Date(ts)) * 60000;
+        return new Date(ts);
       } catch {
         const dt = new Date();
         dt.setFullYear(y, mo - 1, day);
