@@ -1,4 +1,4 @@
-# القرآن الكريم مباشر — v5.3.7
+# القرآن الكريم مباشر — v5.3.8
 
 تطبيق PWA عربي (HTML/CSS/JS بدون إطار): بث إذاعات القرآن، تلاوات كاملة (mp3quran.net)، أذكار، سبحة، مواقيت الصلاة، بوصلة القبلة، مفضلة وإعدادات، وضع فاتح/داكن/نظام، يعمل دون اتصال.
 الموقع: https://qurankareem.live (GitHub Pages، CNAME = `qurankareem.live`).
@@ -25,7 +25,12 @@ Qibla وHLS وعرض قائمة القرّاء كلها كسولة. الخطوط
 لا `eval`/`document.write`/`new Function`. بيانات الـAPI (أسماء القرّاء، المدينة/الدولة) تُهرَّب قبل `innerHTML`. التخزين المحلي يُتحقق منه (ثيم غير صالح يعود للداكن).
 
 ## الاختبار
-انظر `QA_FINAL_REPORT.md`: 57 فحصًا آليًا ناجحًا (+ ما لم يُتحقَّق منه في QA_FINAL_REPORT) (صوت حقيقي، خلفية، تثبيت، قارئ شاشة، Lighthouse، iOS…)، و7 قيود معروفة.
+```
+pip install playwright pillow && playwright install chromium
+bash tests/run_all.sh            # صياغة + وحدة + e2e + فحص وصول
+SLOW=1 bash tests/run_all.sh     # + اختبار بانر التثبيت (~40 ثانية)
+```
+الحزمة: `js/__tests__` (قبلة، 25)، `tests/unit` (كاش، 20، بمحاكاة)، `tests/e2e` (انحدار 55، تخزين فاسد 17، تحديث SW 7، بانر 5، فحص وصول وتباين). النتائج الكاملة وما لم يُختبر (صوت حقيقي، أجهزة، Lighthouse، Firefox/Safari) في `QA_FINAL_REPORT.md`. تقارير المراجعة: `TECHNICAL_AUDIT.md`، `UI_UX_AUDIT.md`.
 
 ## النشر
 انسخ الملفات كما هي مع الحفاظ على `CNAME` و`robots.txt` و`sitemap.xml`. بعد النشر: جرّب تشغيل إذاعة وتلاوة والتبديل بينهما، وأوفلاين بعد أول زيارة، ثم أعد تشغيل PageSpeed.

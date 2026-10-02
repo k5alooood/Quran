@@ -106,8 +106,11 @@ const QiblaService = (() => {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       const obj = JSON.parse(raw);
-      if (Date.now() - obj.ts > CACHE_TTL) return null;
-      return obj.data;
+      if (!obj || typeof obj.ts !== 'number' || Date.now() - obj.ts > CACHE_TTL) return null;
+      const d = obj.data;
+      if (!d || typeof d.lat !== 'number' || typeof d.lon !== 'number') return null;
+      if (!Number.isFinite(d.lat) || !Number.isFinite(d.lon) || Math.abs(d.lat) > 90 || Math.abs(d.lon) > 180) return null;
+      return { lat: d.lat, lon: d.lon, accuracy: Number.isFinite(d.accuracy) ? d.accuracy : null, src: d.src === 'gps' || d.src === 'fallback' ? d.src : 'ip' };
     } catch { return null; }
   };
 

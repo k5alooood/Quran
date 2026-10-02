@@ -4,13 +4,32 @@ const LocationService = (() => {
   const CACHE_KEY = 'qr_location_v3';
   const CACHE_TTL = 6 * 60 * 60 * 1000;
 
+  /* تحقق صارم من الموقع المخزَّن: أنواع/نطاقات صحيحة وإلا يُعدّ الكاش غير موجود (فيُعاد الكشف) */
+  const sanitizeLocation = d => {
+    if (!d || typeof d !== 'object') return null;
+    const { lat, lon } = d;
+    if (typeof lat !== 'number' || typeof lon !== 'number') return null;
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) || Math.abs(lat) > 90 || Math.abs(lon) > 180) return null;
+    const str = (v, max) => (typeof v === 'string' ? v.slice(0, max) : '');
+    const out = {
+      lat, lon,
+      city: str(d.city, 80),
+      country: str(d.country, 80),
+      countryCode: /^[A-Za-z]{2}$/.test(d.countryCode) ? d.countryCode.toUpperCase() : '',
+      timezone: typeof d.timezone === 'string' && /^[A-Za-z0-9_+\-/]{1,64}$/.test(d.timezone) ? d.timezone : 'UTC',
+      src: d.src === 'gps' || d.src === 'fallback' ? d.src : 'ip',
+    };
+    if (typeof d.accuracy === 'number' && Number.isFinite(d.accuracy)) out.accuracy = d.accuracy;
+    return out;
+  };
+
   const getCache = () => {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       const obj = JSON.parse(raw);
-      if (Date.now() - obj.ts > CACHE_TTL) return null;
-      return obj.data;
+      if (!obj || typeof obj.ts !== 'number' || Date.now() - obj.ts > CACHE_TTL) return null;
+      return sanitizeLocation(obj.data);
     } catch { return null; }
   };
 
@@ -74,7 +93,7 @@ const LocationService = (() => {
         const d = await r.json();
         const m = ep.map(d);
         /* تحقق مزدوج: lat/lon يجب أن تكون أرقاماً منطقية */
-        if (!m.lat || !m.lon || isNaN(parseFloat(m.lat))) continue;
+        if (!Number.isFinite(parseFloat(m.lat)) || !Number.isFinite(parseFloat(m.lon))) continue;
         return {
           lat: parseFloat(m.lat), lon: parseFloat(m.lon),
           city: m.city || '',

@@ -210,11 +210,12 @@ function loadPrefs(){
     var savedTheme=lg('qr_theme');
     theme=(savedTheme==='light'||savedTheme==='dark')?savedTheme:'dark';
   }
-  tbCount=parseInt(lg('qr_tb'),10)||0;
-  tbTarget=parseInt(lg('qr_tgt'),10)||99;
-  var fav=lg('qr_favs');if(fav){try{favIds=new Set(JSON.parse(fav))}catch(e){}}
-  var ap=lg('qr_azprog');if(ap){try{azProg=JSON.parse(ap)}catch(e){azProg={morning:{},evening:{}}}}
-  if(!azProg.morning)azProg.morning={};if(!azProg.evening)azProg.evening={};
+  tbCount=Math.max(0,parseInt(lg('qr_tb'),10)||0);
+  tbTarget=parseInt(lg('qr_tgt'),10);if(!(tbTarget>0&&tbTarget<=100000))tbTarget=99;
+  var fav=lg('qr_favs');if(fav){try{var fa=JSON.parse(fav);if(Array.isArray(fa))favIds=new Set(fa.filter(function(x){return typeof x==='string'}))}catch(e){}}
+  var ap=lg('qr_azprog');if(ap){try{azProg=JSON.parse(ap)}catch(e){azProg=null}}
+  if(!azProg||typeof azProg!=='object'||Array.isArray(azProg))azProg={morning:{},evening:{}};
+  if(!azProg.morning||typeof azProg.morning!=='object')azProg.morning={};if(!azProg.evening||typeof azProg.evening!=='object')azProg.evening={};
   /* تصفير تلقائي يومي: إن تغيّر التاريخ منذ آخر زيارة، تُصفَّر أذكار الصباح/المساء */
   var today=new Date();
   var todayStr=today.getFullYear()+'-'+(today.getMonth()+1)+'-'+today.getDate();

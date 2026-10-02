@@ -71,15 +71,45 @@ const PrayerService = (() => {
     return `${n.getFullYear()}-${String(n.getMonth() + 1).padStart(2, '0')}-${String(n.getDate()).padStart(2, '0')}`;
   };
 
+  /* الكاش يُقرأ من localStorage وقد يكون تالفًا أو معدَّلًا: لا نعرض أي نص منه كما هو.
+     نقبل فقط شكلًا صارمًا، ونعيد بناء الاسم والأيقونة من الجداول الثابتة بدل الثقة بالمخزَّن
+     (كانت هذه الحقول تُحقن في innerHTML — تم إثبات XSS مخزَّن بها قبل هذا الإصلاح). */
+  const PRAYER_KEYS = ['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'];
+  const TIME_RE = /^[0-9\u0660-\u0669]{1,2}:[0-9\u0660-\u0669]{2}(?:\s?(?:AM|PM|am|pm|\u0635|\u0645))?$/;
+  const METHOD_RE = /^[A-Za-z]{2,30}$/;
+  const sanitizeCachedPrayers = list => {
+    if (!Array.isArray(list) || list.length !== PRAYER_KEYS.length) return null;
+    const out = [];
+    for (let i = 0; i < list.length; i++) {
+      const p = list[i];
+      if (!p || typeof p !== 'object' || p.key !== PRAYER_KEYS[i]) return null;
+      if (typeof p.ts !== 'number' || !Number.isFinite(p.ts)) return null;
+      if (typeof p.timeStr !== 'string' || !TIME_RE.test(p.timeStr)) return null;
+      if (typeof p.timeRaw !== 'string' || !TIME_RE.test(p.timeRaw)) return null;
+      out.push({
+        key: p.key,
+        nameAr: PRAYER_NAMES_AR[p.key],
+        icon: PRAYER_ICONS[p.key],
+        timeStr: p.timeStr,
+        timeRaw: p.timeRaw,
+        ts: p.ts,
+        methodKey: METHOD_RE.test(String(p.methodKey)) ? p.methodKey : 'UmmAlQura',
+        method: 'مواقيت الصلاة',
+      });
+    }
+    return out;
+  };
+
   const getCache = (lat, lon, madhab) => {
     try {
       const raw = localStorage.getItem(CACHE_KEY);
       if (!raw) return null;
       const obj = JSON.parse(raw);
+      if (!obj || typeof obj !== 'object') return null;
       if (obj.date !== todayKey()) return null;
       if (obj.madhab !== madhab) return null; /* v5: المذهب يغيّر توقيت العصر — يجب إبطال الكاش عند تغييره */
-      if (Math.abs(obj.lat - lat) > 0.3 || Math.abs(obj.lon - lon) > 0.3) return null;
-      return obj.prayers;
+      if (!(Math.abs(obj.lat - lat) <= 0.3) || !(Math.abs(obj.lon - lon) <= 0.3)) return null;
+      return sanitizeCachedPrayers(obj.prayers);
     } catch { return null; }
   };
 
