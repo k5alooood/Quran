@@ -135,6 +135,11 @@ const RecitationUI = (function(){
     }
     if(!list.length){
       el.recitersList.innerHTML = '<p class="no-results">لا يوجد قرّاء مطابقون</p>';
+      if(recSearchQ && el.recSearch){
+        var clr=document.createElement('button');clr.type='button';clr.className='cat-pill';clr.textContent='مسح البحث';
+        clr.addEventListener('click',function(){el.recSearch.value='';recSearchQ='';renderReciters();el.recSearch.focus();});
+        el.recitersList.appendChild(clr);
+      }
       return;
     }
     el.recitersList.innerHTML = '';
@@ -142,7 +147,6 @@ const RecitationUI = (function(){
       var div=document.createElement('div');
       div.className='st-item';
       div.setAttribute('role','listitem');
-      div.tabIndex=0;
       div.style.animationDelay=(idx*25)+'ms';
       var initial = esc(String(r.name||'ق').trim().charAt(0));
       div.innerHTML =
@@ -150,8 +154,10 @@ const RecitationUI = (function(){
           '<span class="rc-initial">'+initial+'</span>'+
         '</div>'+
         '<div class="st-info"><div class="st-name">'+esc(r.name)+'</div></div>';
+      var hitR=document.createElement('button');hitR.type='button';hitR.className='st-hit';
+      hitR.setAttribute('aria-label','عرض سور '+String(r.name||''));
+      div.insertBefore(hitR,div.firstChild);
       div.addEventListener('click', function(){openReciter(r);});
-      div.addEventListener('keydown', function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();openReciter(r);}});
       el.recitersList.appendChild(div);
     });
   }
@@ -197,14 +203,16 @@ const RecitationUI = (function(){
       var div=document.createElement('div');
       div.className='st-item'+(isActive?' active':'')+(isActive&&isPlaying()?' playing':'');
       div.setAttribute('role','listitem');
-      div.tabIndex=0;
       div.style.animationDelay=(Math.min(idx,20)*20)+'ms';
       div.innerHTML =
         '<div class="st-icon" aria-hidden="true">'+toArabicDigits(num)+'</div>'+
         '<div class="st-info"><div class="st-name">سورة '+RecitationService.surahName(num)+'</div></div>'+
         '<div class="st-eq"><span></span><span></span><span></span></div>';
+      var hitS=document.createElement('button');hitS.type='button';hitS.className='st-hit';
+      hitS.setAttribute('aria-label','تشغيل سورة '+RecitationService.surahName(num));
+      if(isActive)hitS.setAttribute('aria-current','true');
+      div.insertBefore(hitS,div.firstChild);
       div.addEventListener('click', function(){playSurah(num);});
-      div.addEventListener('keydown', function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();playSurah(num);}});
       el.surahsList.appendChild(div);
     });
   }
@@ -330,6 +338,7 @@ const RecitationUI = (function(){
     audio.volume=v/100;
     if(el.volume) el.volume.style.setProperty('--val',v+'%');
     if(el.vpct) el.vpct.textContent=toArabicDigits(v)+'٪';
+    if(el.volume) el.volume.setAttribute('aria-valuetext', toArabicDigits(v)+'٪');
     ls('qr_recite_vol', v);
   }
   function updateVolIcon(){
@@ -378,6 +387,7 @@ const RecitationUI = (function(){
         var pct = (audio.currentTime/audio.duration)*100;
         if(el.seek){el.seek.value=pct;el.seek.style.setProperty('--val',pct+'%');}
         if(el.curTime) el.curTime.textContent = fmtTime(audio.currentTime);
+        if(el.seek) el.seek.setAttribute('aria-valuetext', fmtTime(audio.currentTime)+' من '+fmtTime(audio.duration));
       }
       if(Math.floor(audio.currentTime)%5===0 && audio.currentTime>0) saveState();
     });

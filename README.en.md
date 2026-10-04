@@ -6,7 +6,7 @@
 
 [![Live](https://img.shields.io/badge/Live-qurankareem.live-d4af37?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
 [![PWA](https://img.shields.io/badge/PWA-Installable%20%2B%20Offline-7a5a16?style=for-the-badge&logo=pwa&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
-[![Version](https://img.shields.io/badge/version-5.3.8-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-5.4.1-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
 
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f7df1e?style=flat-square&logo=javascript&logoColor=black)
 ![No framework](https://img.shields.io/badge/Framework-none-1c1a13?style=flat-square)
@@ -51,7 +51,7 @@ It is mobile-first (one-hand use), installable on the home screen, and works off
 ### 🎧 Listening
 | Feature | Details |
 |---|---|
-| **Live radio** | 19 streams: 6 official stations (Quran Radio, Makkah & Madinah Haram, Sharjah, Tafsir, Ruqyah) and 13 reciters; search and filters (All / Favorites / Official / Reciters) |
+| **Live radio** | The "Listen now" button plays **the last station you listened to** (or the default). 19 streams: 6 official stations (Quran Radio, Makkah & Madinah Haram, Sharjah, Tafsir, Ruqyah) and 13 reciters; search and filters (All / Favorites / Official / Reciters) |
 | **Full recitations** | Pick the narration (Hafs, Warsh, Qalon…), the reciter, then the surah; previous/next and state restore. Data from the [mp3quran.net](https://mp3quran.net) API |
 | **Offline recitations** | Save chosen surahs in the browser cache and play them without internet |
 | **Mini player** | Controls whichever source is active (radio or recitation) with Media Session lock-screen integration |
@@ -69,7 +69,7 @@ It is mobile-first (one-hand use), installable on the home screen, and works off
 ### 🎨 Experience
 - Calm **warm-gold** identity; **light / dark / system** themes
 - Native Arabic RTL, **Cairo** and **Amiri** fonts
-- Six-item bottom navigation; a desktop layout (sidebar from 1024px) with shortcuts: `Space` play/pause · `M` mute · `[` `]` previous/next
+- **Arabic-Indic digits** (٠–٩) everywhere; six-item bottom navigation; a tablet layout (768–1023px: grids and wider content) and a desktop layout (sidebar from 1024px) with shortcuts: `Space` play/pause · `M` mute · `[` `]` previous/next
 - Honors `prefers-reduced-motion`; status indicators are static (no blinking)
 
 ### 📲 PWA
@@ -138,7 +138,7 @@ A single interactive color; red is reserved for errors.
 
 ## ♿ Accessibility
 
-Semantic HTML, `lang="ar" dir="rtl"`, skip link, `aria-live` regions for playback status, visible focus rings for every keyboard stop, and contrast checked against WCAG AA in both themes.
+Semantic HTML, `lang="ar" dir="rtl"`, skip link, station/reciter/surah cards are real buttons, dialogs with full focus management (enter / trap / restore), `aria-live` regions for playback status, visible focus rings for every keyboard stop, and contrast checked against WCAG AA in both themes.
 
 ## 🚀 Run locally
 
@@ -161,8 +161,8 @@ SLOW=1 bash tests/run_all.sh     # + install-banner test (~40 s)
 
 | Type | Content |
 |---|---|
-| Unit (Node) | Qibla math (25) · cache validation (20, mocked) |
-| e2e (Chromium) | full regression (55) · corrupt/poisoned storage (17) · SW update flow (7) · install banner (5) · accessibility & contrast scans |
+| Unit (Node) | Qibla math (25) · cache validation (20, mocked) · prayer countdown (5) |
+| e2e (Chromium) | full regression (55) · 5.4.0 changes: dialogs/cards/numerals/tablet (67) · corrupt/poisoned storage (17) · SW update flow (7) · install banner (5) · accessibility & contrast scans |
 
 Full results and what is **not** yet verified (real audio, Android/iOS devices, Lighthouse, Firefox/Safari): [`QA_FINAL_REPORT.md`](QA_FINAL_REPORT.md).
 

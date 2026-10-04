@@ -168,7 +168,7 @@ var DAYS=['الأحد','الإثنين','الثلاثاء','الأربعاء','�
 var MONTHS=['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
 function updateCalendar(){
   var now=new Date();
-  if(EL.calGreg)EL.calGreg.textContent=now.getDate()+' '+MONTHS[now.getMonth()]+' '+now.getFullYear();
+  if(EL.calGreg)EL.calGreg.textContent=toAr(now.getDate())+' '+MONTHS[now.getMonth()]+' '+toAr(now.getFullYear());
   if(EL.calDay)EL.calDay.textContent=DAYS[now.getDay()];
   if(EL.calHijri){
     try{EL.calHijri.textContent=new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{day:'numeric',month:'long',year:'numeric'}).format(now);}
@@ -298,6 +298,12 @@ function getStIcon(st){
   return '<div class="st-icon st-icon--svg">'+svg+'</div>';
 }
 
+/* aria-current على بطاقة الإذاعة المختارة فقط */
+function syncStCurrent(){
+  document.querySelectorAll('.st-item .st-hit').forEach(function(h){
+    if(h.parentNode.classList.contains('active'))h.setAttribute('aria-current','true');else h.removeAttribute('aria-current');
+  });
+}
 function renderStationList(container,list,emptyMsg){
   if(!container)return;
   if(!list.length){container.innerHTML='<p class="no-results">'+emptyMsg+'</p>';return;}
@@ -307,16 +313,18 @@ function renderStationList(container,list,emptyMsg){
     var div=document.createElement('div');
     div.className='st-item'+(isActive?' active':'')+(isPlay?' playing':'');
     div.setAttribute('role','listitem');div.setAttribute('data-id',st.id);div.setAttribute('data-cat',st.cat);
-    div.tabIndex=0;div.style.animationDelay=(idx*30)+'ms';
+    div.style.animationDelay=(idx*30)+'ms';
     div.innerHTML=getStIcon(st)+
       '<div class="st-info"><div class="st-name">'+st.name+'</div><span class="st-badge">'+st.cat+'</span></div>'+
       '<div class="st-eq"><span></span><span></span><span></span></div>'+
       '<button class="st-fav'+(isFav?' saved':'')+'\" data-id="'+st.id+'" aria-label="'+(isFav?'إزالة من المفضلة':'إضافة للمفضلة')+'">'+
         '<svg viewBox="0 0 24 24" fill="'+(isFav?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'+
       '</button>';
+    var hit=document.createElement('button');hit.type='button';hit.className='st-hit';
+    hit.setAttribute('aria-label','تشغيل '+st.name);if(isActive)hit.setAttribute('aria-current','true');
+    div.insertBefore(hit,div.firstChild);
     div.addEventListener('click',function(e){if(e.target.closest('.st-fav'))return;playStation(st);});
     div.querySelector('.st-fav').addEventListener('click',function(e){e.stopPropagation();toggleFav(st.id,this);});
-    div.addEventListener('keydown',function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();playStation(st);}});
     container.appendChild(div);
   });
 }
@@ -333,7 +341,7 @@ function renderStations(){
     var q=stSearchQuery.trim().toLowerCase();
     list=list.filter(function(s){return s.name.toLowerCase().indexOf(q)!==-1;});
   }
-  renderStationList(EL.stList,list,'لا توجد إذاعات مطابقة');
+  renderStationList(EL.stList,list,(activeCat==='المفضلة'&&!stSearchQuery)?'لا توجد إذاعات في المفضلة بعد — اضغط أيقونة النجمة على أي إذاعة لإضافتها هنا':'لا توجد إذاعات مطابقة');
 }
 function toggleFav(id,btn){
   if(favIds.has(id)){favIds.delete(id);btn.classList.remove('saved');btn.setAttribute('aria-label','إضافة للمفضلة');btn.querySelector('svg').setAttribute('fill','none');}
@@ -362,6 +370,7 @@ function playStation(st){
   document.querySelectorAll('.st-item').forEach(function(d){d.classList.remove('active','playing');});
   var targetEl=EL.stList?EL.stList.querySelector('[data-id="'+st.id+'"]'):null;
   if(targetEl){targetEl.classList.add('active');targetEl.scrollIntoView({behavior:'smooth',block:'nearest'});}
+  syncStCurrent();
   currentSt=st;usingBk=false;retryCount=0;wantPlaying=true;clearBgRetry();
   ls('qr_last',st.id);
   if(EL.npStation)EL.npStation.textContent=st.name;
@@ -574,7 +583,7 @@ function render(state){
 ═══════════════════════════════════════════ */
 function setVol(v){vol=v;audio.volume=v/100;if(EL.vslider)EL.vslider.style.setProperty('--val',v+'%');drawVol();ls('qr_vol',v);}
 function drawVol(){
-  var v=muted?0:vol;if(EL.vpct)EL.vpct.textContent=toAr(v)+'٪';
+  var v=muted?0:vol;if(EL.vpct)EL.vpct.textContent=toAr(v)+'٪';if(EL.vslider)EL.vslider.setAttribute('aria-valuetext',toAr(v)+'٪');
   var ih=EL.mutebtn&&EL.mutebtn.querySelector('.i-vh');
   var il=EL.mutebtn&&EL.mutebtn.querySelector('.i-vl');
   var im=EL.mutebtn&&EL.mutebtn.querySelector('.i-vm');
@@ -656,7 +665,7 @@ function buildAzkar(period){
     html+='<div class="zi'+(done?' done':'')+'" id="z_'+period+'_'+i+'">';
     html+='<div class="zi-text">'+z.t.replace(/\n/g,'<br/>')+'</div>';
     html+='<div class="zi-trans">'+z.tr+'</div><div class="zi-footer">';
-    html+='<span class="zi-badge">'+(z.n===1?'مرة واحدة':z.n+' مرات')+'</span>';
+    html+='<span class="zi-badge">'+(z.n===1?'مرة واحدة':toAr(z.n)+' مرات')+'</span>';
     if(z.n>1){
       html+='<div class="zi-counter"><span class="zi-val" id="zv_'+period+'_'+i+'">'+toAr(cur)+'/'+toAr(z.n)+'</span>';
       html+='<button class="zi-btn" id="zb_'+period+'_'+i+'" onclick="azkarTap(\''+period+'\','+i+')" '+(done?'disabled':'')+'>'+( done?'✓ تم':'ذِكر')+'</button></div>';
@@ -766,8 +775,8 @@ function setupBnav(){
     if(match)setActive(match.link);
   }};
 }
-function enterFocus(){focusOn=true;if(EL.fdiv)EL.fdiv.classList.remove('hidden');try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}catch(e){}}
-function exitFocus(){focusOn=false;if(EL.fdiv)EL.fdiv.classList.add('hidden');try{document.exitFullscreen&&document.exitFullscreen();}catch(e){}}
+function enterFocus(){var op=document.activeElement;focusOn=true;if(EL.fdiv){EL.fdiv.classList.remove('hidden');if(window.DialogA11y)DialogA11y.open(EL.fdiv,{opener:op,fallback:document.getElementById('menuBtn')});}try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen();}catch(e){}}
+function exitFocus(){var was=focusOn;focusOn=false;if(EL.fdiv){EL.fdiv.classList.add('hidden');if(window.DialogA11y&&was)DialogA11y.close(EL.fdiv);}try{document.exitFullscreen&&document.exitFullscreen();}catch(e){}}
 /* v5.1: ربط اختصارات PWA (manifest.json shortcuts) وأي رابط عميق آخر بوجهته الصحيحة فعليًا.
    كانت هذه الروابط (?s=ksa، #azkar، #prayer) لا تُفعّل شيئًا لأن أي كود لم يكن يقرأها،
    وبعضها يشير أصلاً إلى IDs غير موجودة في الصفحة (#azkar/#prayer بدل azCard/prayerSection) —
@@ -883,6 +892,14 @@ function bindUI(){
     ['qr_favs','qr_tb','qr_tgt','qr_azprog','qr_azdate','qr_vol','qr_muted','qr_theme','qr_theme_mode','qr_last'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
     window.location.reload();
   });
+  var heroBtn=document.querySelector('.hero-primary');
+  if(heroBtn)heroBtn.addEventListener('click',function(e){
+    e.preventDefault();
+    if(isPlaying||isLoading){if(EL.npCard)EL.npCard.scrollIntoView({behavior:'smooth',block:'nearest'});return;}
+    var lastId=lg('qr_last');
+    var st=STATIONS.filter(function(s){return s.id===lastId;})[0]||STATIONS[0];
+    playStation(st);
+  });
   if(EL.focusbtn)EL.focusbtn.addEventListener('click',enterFocus);
   if(EL.fexit)EL.fexit.addEventListener('click',exitFocus);
   if(EL.sharebtn)EL.sharebtn.addEventListener('click',shareApp);
@@ -931,8 +948,13 @@ function bindUI(){
 
   /* Keyboard */
   document.addEventListener('keydown',function(e){
-    if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT')return;
     if(e.key==='Escape'&&focusOn)exitFocus();
+    /* اختصارات الحرف الواحد (Space/M/[ ]) لا تعمل أثناء التركيز على عنصر تفاعلي أو حقل إدخال:
+       كانت Space تُمنع (preventDefault) على كل زر فتشغّل/توقف الصوت بدل تفعيل الزر نفسه،
+       أي أن مستخدم لوحة المفاتيح لا يستطيع تفعيل أي زر بـSpace. */
+    var kt=e.target,ktag=kt&&kt.tagName,krole=(kt&&kt.getAttribute&&kt.getAttribute('role'))||'';
+    if(e.ctrlKey||e.altKey||e.metaKey)return;
+    if(ktag==='INPUT'||ktag==='SELECT'||ktag==='TEXTAREA'||ktag==='BUTTON'||ktag==='A'||ktag==='SUMMARY'||(kt&&kt.isContentEditable)||/^(button|link|tab|switch|checkbox|slider|menuitem|option)$/.test(krole))return;
     if(e.code==='Space'){
       e.preventDefault();
       /* v5.11: نفس إصلاح v27 لزر mbtn — لازم نوجّه لمصدر الصوت النشط فعليًا، مش

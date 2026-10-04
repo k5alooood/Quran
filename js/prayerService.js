@@ -339,13 +339,14 @@ const PrayerService = (() => {
   };
 
   const formatCountdown = ms => {
-    if (ms <= 0) return '00:00:00';
+    if (ms <= 0) return '\u0660\u0660:\u0660\u0660:\u0660\u0660';
     const s = Math.floor(ms / 1000);
     const h = Math.floor(s / 3600);
     const m = Math.floor((s % 3600) / 60);
     const sec = s % 60;
     const z = n => String(n).padStart(2, '0');
-    return `${z(h)}:${z(m)}:${z(sec)}`;
+    /* سياسة الأرقام: عربية هندية في كل الواجهة */
+    return `${z(h)}:${z(m)}:${z(sec)}`.replace(/\d/g, d => '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'[+d]);
   };
 
   return { getPrayers, getNextPrayer, formatCountdown };

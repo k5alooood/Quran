@@ -80,8 +80,10 @@ const QiblaUI = (() => {
 
   const ACCURACY_LABEL = { good: '📍 دقيق', fair: '〰️ تقريبي', poor: '⚠️ منخفض' };
 
-  const fmtDeg = n => Math.round(QiblaService.normalizeAngle(n)) + '°';
-  const fmtDist = km => km == null ? '—' : (km < 10 ? km.toFixed(1) : Math.round(km)).toString() + ' كم';
+  /* سياسة الأرقام: عربية هندية (٠–٩) وفاصلة عشرية عربية */
+  const toAr = s => String(s).replace(/\d/g, d => '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'[+d]).replace('.', '\u066B');
+  const fmtDeg = n => toAr(Math.round(QiblaService.normalizeAngle(n))) + '°';
+  const fmtDist = km => km == null ? '—' : toAr(km < 10 ? km.toFixed(1) : Math.round(km)) + ' كم';
 
   /* ══════════════════════════════════════════════════
      قوالب العرض (تُستبدل بالكامل عند تغيّر الحالة فقط —
@@ -416,6 +418,7 @@ const QiblaUI = (() => {
     screenEl.classList.remove('hidden');
     screenEl.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+    if (window.DialogA11y) window.DialogA11y.open(screenEl, { opener: document.activeElement, initial: '#qiblaClose', fallback: Array.prototype.filter.call(document.querySelectorAll('[data-qibla-open]'), function (el) { return el.getClientRects().length > 0; })[0] });
     const ok = await ensureLocation();
     if (!ok) return;
     await beginSensors();
@@ -425,6 +428,7 @@ const QiblaUI = (() => {
     stopSensors();
     if (screenEl) { screenEl.classList.add('hidden'); screenEl.setAttribute('aria-hidden', 'true'); }
     document.body.style.overflow = '';
+    if (window.DialogA11y && screenEl) window.DialogA11y.close(screenEl);
   };
 
   const isOpen = () => screenEl && !screenEl.classList.contains('hidden');

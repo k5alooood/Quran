@@ -1,4 +1,4 @@
-# TECHNICAL_AUDIT — Quran Kareem v5.3.8
+# TECHNICAL_AUDIT — Quran Kareem v5.4.1
 
 > نطاق وصدق: المراجعة على الكود الفعلي (11 ملف JS + sw.js + index.html + CSS 93KB) في بيئة sandbox بلا إنترنت وبلا Git وبمتصفح Chromium فقط. لا Lighthouse ولا Firefox/WebKit ولا أجهزة حقيقية — كل ما لم يُختبر موسوم NOT VERIFIED. لا توجد درجة جودة إجمالية.
 
@@ -54,3 +54,33 @@ CSS 100KB → 92.8KB (إزالة ميت). لا قياس Lighthouse (BLOCKED) ف�
 
 ## 7) مخاطر متبقية
 iOS/Android الحقيقيان؛ شبكة بطيئة؛ سلوك مزوّدي IP الفعلي؛ Firefox/Safari.
+
+
+---
+## تحديث 5.4.0
+
+| ID | الشدّة | الحالة | الموضوع | الإصلاح (ملف) |
+|---|---|---|---|---|
+| A11Y-NEW-1 | **Medium** | Verified ✔ (قبل: `defaultPrevented=true` على BUTTON) | Space العام يمنع تفعيل الأزرار بالكيبورد (WCAG 2.1.1 / 2.1.4) | `js/app.js` معالج keydown: حارس للتفاعليات؛ Escape قبله |
+| A11Y-01 | Medium | Verified ✔ | حوارات بلا إدارة تركيز | `js/dialog-a11y.js` + `app.js` (enter/exitFocus) + `qiblaUI.js` (open/close) |
+| A11Y-02 | Medium | DOM ✔ | `div[role=listitem][tabindex]` تفاعلي | `button.st-hit` (`app.js`, `recitationUI.js`) |
+| LAYOUT-NEW | Low | Verified ✔ | `#stList` شريط أفقي على تابلت/سطح مكتب | `css/styles.min.css` (قاعدة `min-width:768px`) |
+| I18N-01 | Medium | Verified ✔ | أرقام لاتينية في التاريخ والعدّاد والأذكار والقبلة | `app.js`، `prayerService.js`، `qiblaUI.js` |
+
+- **تراجع عن ادعاء سابق:** UX-02 كان خاطئًا (انظر UI_UX_AUDIT).
+- **تغيير سلوك عام معتمد:** زر «استمع الآن» يشغّل الإذاعة (بنقرة مستخدم فلا تعارض مع سياسة autoplay).
+- **ملف جديد:** `js/dialog-a11y.js` (≈60 سطرًا، بلا اعتماديات)؛ يُحمَّل قبل `app.js`.
+- **الأمان:** لا تغيير على سطح الهجوم؛ `aria-label` يُضبط عبر `setAttribute` (لا innerHTML) لأسماء القرّاء القادمة من API.
+- **لم يُتحقق:** سلوك الحوارات مع قارئ شاشة؛ iOS Safari (لا يركّز الأزرار عند النقر: يعتمد الإرجاع على المفتاح البديل — مصمَّم لكنه غير مُختبر هناك).
+
+
+---
+## تحديث 5.4.1 (من لقطات المستخدم)
+| ID | الشدّة | الحالة | الموضوع | الإصلاح |
+|---|---|---|---|---|
+| LAYOUT-02 | **Medium** | Verified ✔ (قياس) | بطاقة الإعدادات بلا حشو (<1024px): العنوان والترس والصفوف على الحافة | `.stg-card{padding:…}` |
+| LAYOUT-03 | **Medium** | Verified ✔ | شبكة التلاوات `1fr 1fr` + شريط روايات nowrap ⇒ مسار بعرض ~1800px، المحتوى خارج البطاقة (768–1439px) | `minmax(0,1fr)` + `min-width:0` |
+| LAYOUT-04 | Medium | Verified ✔ | قوائم القرّاء/السور شريط أفقي مقصوص على التابلت وسطح المكتب (لم يُلتقط في 5.4.0 رغم إصلاح `#stList` المشابه) | `grid-auto-flow:row` + تمرير رأسي |
+| LAYOUT-05 | Low | Verified ✔ | أيقونة البوصلة/التحديث تنحرف 3.5–4.1px: وراثة `.pt-section-title svg` | `.pt-section-title button svg{margin:0…}` |
+- **درس منهجي:** إصلاحي لـ`#stList` في 5.4.0 كان علاجًا لعَرَض واحد؛ السبب الجذري (`grid-auto-flow:column` الموروث من الجوال لكل `.st-list`) ظهر مرة ثانية في القرّاء والسور. اختبار الاحتواء الجديد يمسح كل البطاقات بدل عنصر واحد.
+- **لم يُتحقق:** عرض فعلي على هاتف في وضع «سطح المكتب»؛ استُخدمت محاكاة بعروض 980–1440px.
