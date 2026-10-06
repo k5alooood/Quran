@@ -77,6 +77,7 @@ var fadeTimer=null,statusTimer=null;
 var focusOn=false,ignSrc=false;
 var activeCat='الكل',favIds=new Set();
 var stSearchQuery='';
+var ST_CAP=5,stShowAll=false,stTotal=0; /* v5.6: على الجوال تُعرض أول ٥ إذاعات ثم «عرض الكل» (الإخفاء بـCSS فقط؛ العناصر تبقى في الـDOM) */
 var tbCount=0,tbTarget=99;
 var azProg={morning:{},evening:{}};
 var isIOS=/iPad|iPhone|iPod/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
@@ -109,7 +110,7 @@ var EL={
   sharebtn:g('sharebtn'),thbtn:g('thbtn'),thbtnLabel:g('thbtnLabel'),dThemeBtn:g('dThemeBtn'),
   menuBtn:g('menuBtn'),appMenu:g('appMenu'),
   vrow:g('vrow'),mutebtn:g('mutebtn'),vslider:g('vslider'),vpct:g('vpct'),
-  catPills:g('catPills'),stList:g('stList'),stSearch:g('stSearch'),favList:g('favList'),
+  catPills:g('catPills'),stList:g('stList'),stMore:g('stMore'),stSearch:g('stSearch'),favList:g('favList'),
   tbTap:g('tbTap'),tbRst:g('tbRst'),tbNum:g('tbNum'),tbArc:g('tbArc'),
   tbFill:g('tbFill'),tbMile:g('tbMile'),tbTargetBtn:g('tbTargetBtn'),tbTargetNum:g('tbTargetNum'),
   tbFlash:g('tbFlash'),tbFlashMsg:g('tbFlashMsg'),
@@ -227,7 +228,7 @@ function loadPrefs(){
   if(EL.vslider)EL.vslider.value=vol;
   applyTheme(theme,false);
   if(currentSt){
-    if(EL.npStation)EL.npStation.textContent=currentSt.name;
+    if(EL.npStation)EL.npStation.textContent='آخر استماع';
     if(EL.npTitle)EL.npTitle.textContent=currentSt.name;
     if(EL.miniTitle)EL.miniTitle.textContent=currentSt.name;
   }
@@ -342,6 +343,17 @@ function renderStations(){
     list=list.filter(function(s){return s.name.toLowerCase().indexOf(q)!==-1;});
   }
   renderStationList(EL.stList,list,(activeCat==='المفضلة'&&!stSearchQuery)?'لا توجد إذاعات في المفضلة بعد — اضغط أيقونة النجمة على أي إذاعة لإضافتها هنا':'لا توجد إذاعات مطابقة');
+  stTotal=list.length;syncStMore();
+}
+function syncStMore(){
+  if(!EL.stList)return;
+  var needs=stTotal>ST_CAP&&!stSearchQuery;
+  if(needs&&!stShowAll)EL.stList.setAttribute('data-capped','');else EL.stList.removeAttribute('data-capped');
+  if(EL.stMore){
+    EL.stMore.hidden=!needs;
+    EL.stMore.textContent=stShowAll?'عرض أقل':'عرض الكل ('+toAr(stTotal)+')';
+    EL.stMore.setAttribute('aria-expanded',stShowAll?'true':'false');
+  }
 }
 function toggleFav(id,btn){
   if(favIds.has(id)){favIds.delete(id);btn.classList.remove('saved');btn.setAttribute('aria-label','إضافة للمفضلة');btn.querySelector('svg').setAttribute('fill','none');}
@@ -500,7 +512,7 @@ function manualRetry(){
 function clearTmrs(){clearTimeout(retryTmr);clearTimeout(stallTmr);clearTimeout(silenceTmr);retryTmr=stallTmr=silenceTmr=null;}
 function startAudio(){
   if(window.RecitationUI && window.RecitationUI.pause) window.RecitationUI.pause();
-  window.__activeAudioSource='radio';
+  window.__activeAudioSource='radio';document.dispatchEvent(new Event('qr:source'));
   wantPlaying=true;
   isLoading=true;render('loading');
   var p=audio.play();
@@ -534,6 +546,7 @@ function render(state){
   var play3=EL.fpbtn?EL.fpbtn.querySelector('.i-play'):null;
   var pause3=EL.fpbtn?EL.fpbtn.querySelector('.i-pause'):null;
   if(state==='playing'){
+    document.dispatchEvent(new Event('qr:played'));
     h(EL.viz,false);if(EL.viz)EL.viz.classList.add('on');h(play1,true);h(pause1,false);if(isMiniRadio){h(play2,true);h(pause2,false);}
     if(play3)h(play3,true);if(pause3)h(pause3,false);
     if(EL.pbtn)EL.pbtn.classList.add('playing');
@@ -608,7 +621,7 @@ function drawTasbeeh(animate){
     EL.tbArc.style.strokeDashoffset=TB_CIRC*(1-pct);
   }
   if(EL.tbFill)EL.tbFill.style.width=(pct*100).toFixed(1)+'%';
-  if(EL.tbNum)EL.tbNum.textContent=toAr(tbCount);
+  if(EL.tbNum){EL.tbNum.textContent=tbCount===0?'المس للبدء':toAr(tbCount);EL.tbNum.classList.toggle('is-zero',tbCount===0);} /* v5.6: ٠ العربية نقطة — نعرض إرشادًا بدل الصفر */
   var mile=MILESTONES[tbCount];
   if(EL.tbMile){if(mile){EL.tbMile.textContent=mile;EL.tbMile.classList.add('show');}else EL.tbMile.classList.remove('show');}
   if(animate&&EL.tbNum){EL.tbNum.classList.remove('bump');void EL.tbNum.offsetWidth;EL.tbNum.classList.add('bump');}
@@ -696,7 +709,13 @@ window.azkarTap=azkarTap;
 ═══════════════════════════════════════════ */
 function setupObserver(){
   if(!('IntersectionObserver' in window)||!EL.npCard||!EL.mini)return;
-  new IntersectionObserver(function(e){EL.mini.classList.toggle('visible',!e[0].isIntersecting);},{threshold:.15}).observe(EL.npCard);
+  /* v5.6: المشغّل المصغّر لا يظهر قبل أن يبدأ أي مصدر صوت (بدل شريط «متوقف» فارغ)؛ يظهر بعد التشغيل الأول
+     حتى لو أُوقف مؤقتًا (استئناف سريع). التحديث عند تغيّر ظهور البطاقة أو عند بدء مصدر جديد. */
+  var npInView=true;
+  function syncMini(){EL.mini.classList.toggle('visible',!npInView&&!!window.__activeAudioSource);}
+  new IntersectionObserver(function(e){npInView=e[0].isIntersecting;syncMini();},{threshold:.15}).observe(EL.npCard);
+  document.addEventListener('qr:played',syncMini);
+  document.addEventListener('qr:source',syncMini);
 }
 /* v5.1: إصلاح جذري لخطأ "الضغط على أيقونة يفتح قسمًا آخر أحيانًا".
    السبب الفعلي: بعض الأقسام (خصوصًا #reciteCard) تُحمَّل بمحتوى ديناميكي عبر شبكة
@@ -856,6 +875,10 @@ function bindUI(){
   if(EL.fpbtn)EL.fpbtn.addEventListener('click',togglePlay);
   if(EL.rbtn)EL.rbtn.addEventListener('click',manualRetry);
   var debouncedRenderStations=debounce(renderStations,150);
+  if(EL.stMore)EL.stMore.addEventListener('click',function(){
+    stShowAll=!stShowAll;syncStMore();
+    if(!stShowAll){var sc=g('stationsCard');if(sc)sc.scrollIntoView({block:'nearest',behavior:'smooth'});}
+  });
   if(EL.stSearch)EL.stSearch.addEventListener('input',function(e){stSearchQuery=e.target.value;debouncedRenderStations();});
   if(!isIOS){
     if(EL.vslider)EL.vslider.addEventListener('input',function(e){setVol(parseInt(e.target.value,10));});
@@ -889,7 +912,7 @@ function bindUI(){
   var stgResetBtn=g('stgResetBtn');
   if(stgResetBtn)stgResetBtn.addEventListener('click',function(){
     if(!window.confirm('سيتم مسح المفضلة، عداد السبحة، تقدّم الأذكار، والتفضيلات المحفوظة على هذا الجهاز. متابعة؟'))return;
-    ['qr_favs','qr_tb','qr_tgt','qr_azprog','qr_azdate','qr_vol','qr_muted','qr_theme','qr_theme_mode','qr_last'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
+    ['qr_favs','qr_tb','qr_tgt','qr_azprog','qr_azdate','qr_vol','qr_muted','qr_theme','qr_theme_mode','qr_last','qr_visits'].forEach(function(k){try{localStorage.removeItem(k);}catch(e){}});
     window.location.reload();
   });
   var heroBtn=document.querySelector('.hero-primary');

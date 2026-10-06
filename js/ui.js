@@ -255,12 +255,12 @@ const PrayerUI = (() => {
       <div class="pt-next-wrap">
         <div class="pt-next-label"><span class="pt-next-dot"></span>الصلاة القادمة</div>
         <div class="pt-next-name">${next.nameAr}</div>
-        <div class="pt-countdown" id="ptCountdown">${PrayerService.formatCountdown(next.ts - Date.now())}</div>
+        <div class="pt-countdown" id="ptCountdown">${PrayerService.formatCountdownWords(next.ts - Date.now())}</div>
         <div class="pt-next-time">${next.timeStr}</div>
       </div>` : ''}
       <div class="pt-grid">
         ${prayers.map(p => `
-          <div class="pt-prayer-item${next && p.key===next.key?' pt-next-active':''}${p.key==='sunrise'?' pt-sunrise':''}">
+          <div class="pt-prayer-item${next && p.key===next.key?' pt-next-active':''}${p.key==='sunrise'?' pt-sunrise':''}${p.ts < Date.now() && !(next && p.key===next.key) ? ' pt-past' : ''}">
             <div class="pt-p-icon">${p.icon}</div>
             <div class="pt-p-name">${p.nameAr}</div>
             <div class="pt-p-time">${p.timeStr}</div>
@@ -357,11 +357,53 @@ const PrayerUI = (() => {
   };
 
   /* ══════════════════════════════════════════════════
+     بطاقة «الصلاة القادمة» في الصفحة الرئيسية
+     تظهر فقط بعد نجاح حساب المواقيت (وتحلّ محل شريط التاريخ بـCSS)،
+     وتُخفى أثناء إعادة الحساب أو عند الفشل فيعود شريط التاريخ.
+  ══════════════════════════════════════════════════ */
+  const homeChip = (() => {
+    const $ = id => document.getElementById(id);
+    const dateCaption = () => {
+      const day = ($('calDay')?.textContent || '').trim();
+      const greg = ($('calGreg')?.textContent || '').trim().replace(/\s+[\u0660-\u0669]{4}$/, '');
+      const hij = ($('calHijri')?.textContent || '').trim().replace(/\s*هـ$/, '');
+      return [day && greg ? day + ' ' + greg : (day || greg), hij].filter(Boolean).join(' · ');
+    };
+    const setAria = (name, count, fallback) => {
+      const el = $('homeNextPrayer');
+      if (el) el.setAttribute('aria-label', 'الصلاة القادمة' + (fallback ? ' (مكة المكرمة)' : '') + ': ' + name + '، بعد ' + count);
+    };
+    return {
+      hide() { const el = $('homeNextPrayer'); if (el) el.hidden = true; },
+      show(next, isFallback) {
+        const el = $('homeNextPrayer');
+        if (!el || !next) return;
+        const count = PrayerService.formatCountdownWords(next.ts - Date.now());
+        $('homeNextName').textContent = next.nameAr;
+        $('homeNextLabel').textContent = isFallback ? 'الصلاة القادمة · مكة المكرمة' : 'الصلاة القادمة';
+        $('homeNextDate').textContent = dateCaption();
+        $('homeNextCount').textContent = count;
+        setAria(next.nameAr, count, isFallback);
+        el.dataset.fallback = isFallback ? '1' : '';
+        el.hidden = false;
+      },
+      tick(next, ms) {
+        const c = $('homeNextCount');
+        if (!c || !next) return;
+        const count = PrayerService.formatCountdownWords(ms);
+        c.textContent = count;
+        const el = $('homeNextPrayer');
+        if (el) setAria(next.nameAr, count, el.dataset.fallback === '1');
+      },
+    };
+  })();
+
+  /* ══════════════════════════════════════════════════
      startCountdown — العداد التنازلي مع التنبيه
   ══════════════════════════════════════════════════ */
   const startCountdown = next => {
     clearInterval(countdownInterval);
-    if (!next) return;
+    if (!next) { homeChip.hide(); return; }
 
     let notificationFired = false;
 
@@ -370,7 +412,8 @@ const PrayerUI = (() => {
       if (!el || !el.isConnected) { clearInterval(countdownInterval); return; }
 
       const msLeft = next.ts - Date.now();
-      el.textContent = PrayerService.formatCountdown(msLeft);
+      el.textContent = PrayerService.formatCountdownWords(msLeft);
+      homeChip.tick(next, msLeft);
 
       if (msLeft <= 0) {
         clearInterval(countdownInterval);
@@ -475,6 +518,7 @@ const PrayerUI = (() => {
      initWithLocation
   ══════════════════════════════════════════════════ */
   const initWithLocation = async (loc, isFallback = false) => {
+    homeChip.hide();
     renderHTML(skeletonHTML());
     try {
       const prayers = await PrayerService.getPrayers(
@@ -485,6 +529,7 @@ const PrayerUI = (() => {
       const manId = 'ptManual_' + Date.now();
       renderHTML(makePrayerCardHTML(prayers, next, { ...loc, countryCode: loc.country }, isFallback, manId));
       startCountdown(next);
+      homeChip.show(next, isFallback);
       bindHandlers({
         /* ضغطة زر "تحديث الموقع" هي بالتحديد الإيماءة الصريحة من المستخدم اللي
            تبرِّر طلب إذن GPS — v5.4 PageSpeed review */
@@ -512,6 +557,7 @@ const PrayerUI = (() => {
      init — نقطة الدخول الرئيسية
   ══════════════════════════════════════════════════ */
   const init = async (forceRefresh = false, allowGPS = false) => {
+    homeChip.hide();
     renderHTML(skeletonHTML());
     try {
       locationData = await LocationService.detect(forceRefresh, allowGPS);
@@ -529,6 +575,7 @@ const PrayerUI = (() => {
       const manId = 'ptManual_' + Date.now();
       renderHTML(makePrayerCardHTML(prayers, next, locationData, isFallback, manId));
       startCountdown(next);
+      homeChip.show(next, isFallback);
       bindHandlers({
         /* ضغطة زر "تحديث الموقع" هي بالتحديد الإيماءة الصريحة من المستخدم اللي
            تبرِّر طلب إذن GPS — v5.4 PageSpeed review */

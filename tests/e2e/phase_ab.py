@@ -263,9 +263,10 @@ with sync_playwright() as p:
             sw = pg.evaluate("document.querySelector('#stList').scrollWidth-document.querySelector('#stList').clientWidth")
             check('desktop %d: stations grid has no horizontal strip (bug fix)' % w, sw <= 1, sw)
             ctx.close()
-        # phone must stay a horizontal scroller (unchanged behavior)
+        # v5.6: phone shows a vertical list (first 5 + «عرض الكل»), never a horizontal strip
         ctx, pg = page(b, 390, 844)
-        check('phone 390: stations remain a horizontal scroller (unchanged)', pg.evaluate("document.querySelector('#stList').scrollWidth>document.querySelector('#stList').clientWidth+100"))
+        check('phone 390: stations are a vertical list with no horizontal strip (v5.6)', pg.evaluate("document.querySelector('#stList').scrollWidth<=document.querySelector('#stList').clientWidth+1"))
+        check('phone 390: «عرض الكل» button exists and is >=44px tall', pg.evaluate("(()=>{const m=document.getElementById('stMore');return !!m&&!m.hidden&&m.getBoundingClientRect().height>=44})()"))
         ctx.close()
     except Exception as ex:
         check('SECTION CRASHED: tablet', False, str(ex)[:120])

@@ -349,5 +349,19 @@ const PrayerService = (() => {
     return `${z(h)}:${z(m)}:${z(sec)}`.replace(/\d/g, d => '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'[+d]);
   };
 
-  return { getPrayers, getNextPrayer, formatCountdown };
+  /* صيغة مقروءة بالوحدات: «٢ س ٦ د» / «١٥ د ٢١ ث» — بلا أصفار بادئة (٠ العربية نقطة فتلتبس بالفاصل).
+     فوق الساعة تُعرض الساعات والدقائق فقط؛ أقل من ساعة تُعرض الدقائق والثواني. */
+  const formatCountdownWords = ms => {
+    const ar = n => String(n).replace(/\d/g, d => '\u0660\u0661\u0662\u0663\u0664\u0665\u0666\u0667\u0668\u0669'[+d]);
+    if (ms <= 0) return 'الآن';
+    const s = Math.floor(ms / 1000);
+    const h = Math.floor(s / 3600);
+    const m = Math.floor((s % 3600) / 60);
+    const sec = s % 60;
+    if (h > 0) return m > 0 ? `${ar(h)} س ${ar(m)} د` : `${ar(h)} س`;
+    if (m > 0) return `${ar(m)} د ${ar(sec)} ث`;
+    return `${ar(sec)} ث`;
+  };
+
+  return { getPrayers, getNextPrayer, formatCountdown, formatCountdownWords };
 })();

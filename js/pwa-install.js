@@ -8,6 +8,46 @@
   const DAY = 14 * 24 * 60 * 60 * 1000; /* فترة احترام الإغلاق: 14 يومًا (كانت يومًا واحدًا — مزعجة) */
   const $ = (id) => document.getElementById(id);
 
+  /* ───── توقيت العرض بحسب النية (بدل مؤقت ثابت) ─────
+     يظهر البانر فقط بعد: (أ) بدء استماع فعلي + 20 ثانية، أو (ب) الزيارة الثانية فصاعدًا + 8 ثوانٍ.
+     «الزيارة» تُعدّ مرة لكل جلسة وتُخزَّن محليًا فقط (qr_visits) — لا تتبّع ولا شبكة. */
+  const VISITS_KEY = 'qr_visits';
+  const PLAY_DELAY = 20000;
+  const RETURN_DELAY = 8000;
+  let engaged = false;
+  let timerId = null;
+
+  function countVisit() {
+    try {
+      if (sessionStorage.getItem('qr_visit_counted')) return;
+      sessionStorage.setItem('qr_visit_counted', '1');
+      localStorage.setItem(VISITS_KEY, String((Number(localStorage.getItem(VISITS_KEY)) || 0) + 1));
+    } catch (_) {}
+  }
+  function visits() {
+    try { return Number(localStorage.getItem(VISITS_KEY)) || 0; } catch (_) { return 0; }
+  }
+  function schedule(ms) {
+    if (timerId !== null) window.clearTimeout(timerId);
+    timerId = window.setTimeout(() => { timerId = null; presentPrompt(); }, ms);
+  }
+  function presentPrompt() {
+    if (isStandalone() || wasDismissed()) return;
+    if (deferredPrompt) {
+      showPrompt('ثبّت القرآن الكريم', 'استمع بسرعة من الشاشة الرئيسية بدون فتح المتصفح كل مرة.', 'تثبيت');
+    } else if (isIOS) {
+      showPrompt('ثبّت القرآن الكريم', 'اضغط مشاركة ثم «إضافة إلى الشاشة الرئيسية» للوصول إليه مثل أي تطبيق.', 'طريقة التثبيت', true);
+    } else {
+      showPrompt('ثبّت القرآن الكريم', 'أضفه إلى الشاشة الرئيسية للاستماع بشكل أسرع وأسهل.', 'طريقة التثبيت', true);
+    }
+  }
+  document.addEventListener('qr:played', () => {
+    if (engaged) return;
+    engaged = true;
+    schedule(PLAY_DELAY);
+  });
+  countVisit();
+
   const promptEl = () => $('pwaInstallPrompt');
   const installBtn = () => $('pwaInstallButton');
   const isStandalone = () =>
@@ -77,11 +117,8 @@
   window.addEventListener('beforeinstallprompt', (event) => {
     event.preventDefault();
     deferredPrompt = event;
-    showPrompt(
-      'ثبّت القرآن الكريم',
-      'استمع بسرعة من الشاشة الرئيسية بدون فتح المتصفح كل مرة.',
-      'تثبيت'
-    );
+    /* لا نعرض البانر فورًا؛ يُعرض بحسب النية (انظر schedule) */
+    if (engaged || visits() >= 2) schedule(engaged ? PLAY_DELAY : RETURN_DELAY);
   });
 
   window.addEventListener('appinstalled', () => {
@@ -111,25 +148,7 @@
     watchModal('fdiv');
     watchModal('qiblaScreen');
 
-    window.setTimeout(() => {
-      if (isStandalone() || wasDismissed() || deferredPrompt) return;
-
-      if (isIOS) {
-        showPrompt(
-          'ثبّت القرآن الكريم',
-          'اضغط مشاركة ثم «إضافة إلى الشاشة الرئيسية» للوصول إليه مثل أي تطبيق.',
-          'طريقة التثبيت',
-          true
-        );
-      } else {
-        showPrompt(
-          'ثبّت القرآن الكريم',
-          'أضفه إلى الشاشة الرئيسية للاستماع بشكل أسرع وأسهل.',
-          'طريقة التثبيت',
-          true
-        );
-      }
-    }, 15000); /* لا نقاطع المستخدم في أول ثوانٍ؛ نمنحه وقتًا للاستماع أولًا */
+    if (visits() >= 2 && !engaged) schedule(RETURN_DELAY);
   });
 
   /* واجهة عامة صغيرة تسمح لشاشة الإعدادات بإعادة استدعاء نفس منطق التثبيت

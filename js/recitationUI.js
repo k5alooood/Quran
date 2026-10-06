@@ -81,6 +81,7 @@ const RecitationUI = (function(){
   }
   function announceActive(){
     window.__activeAudioSource = 'recite';
+    document.dispatchEvent(new Event('qr:source'));
     if(el.miniTitle) el.miniTitle.textContent = selectedReciter ? RecitationService.surahName(currentSurahNum) : 'التلاوات';
     if(el.miniSt) el.miniSt.textContent = selectedReciter ? selectedReciter.name : '';
   }
@@ -363,6 +364,7 @@ const RecitationUI = (function(){
   /* ═══ ربط أحداث الصوت ═══ */
   function bindAudio(){
     audio.addEventListener('play', function(){
+      document.dispatchEvent(new Event('qr:played'));
       if(el.playBtn){el.playBtn.querySelector('.i-play').classList.add('hidden');el.playBtn.querySelector('.i-pause').classList.remove('hidden');}
       if(el.player) el.player.classList.add('playing');
       if(el.npIcon) el.npIcon.classList.add('playing');

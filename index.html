@@ -253,13 +253,13 @@
       <span>التلاوات</span>
     </a>
     <div class="dnav-group-label" role="presentation">العبادة</div>
-    <a href="#azCard" class="bnav-item dnav-item" data-target="azCard" title="الأذكار">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 10.6 7.4 15 9 10.6 10.6 9 15 7.4 10.6 3 9 7.4 7.4Z" fill="currentColor" fill-opacity=".18"/><path d="M18.5 3v3.4M16.8 4.7h3.4"/></svg>
-      <span>الأذكار</span>
-    </a>
     <a href="#tbCard" class="bnav-item dnav-item" data-target="tbCard" title="السبحة">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>
       <span>السبحة</span>
+    </a>
+    <a href="#azCard" class="bnav-item dnav-item" data-target="azCard" title="الأذكار">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 10.6 7.4 15 9 10.6 10.6 9 15 7.4 10.6 3 9 7.4 7.4Z" fill="currentColor" fill-opacity=".18"/><path d="M18.5 3v3.4M16.8 4.7h3.4"/></svg>
+      <span>الأذكار</span>
     </a>
     <a href="#prayerSection" class="bnav-item dnav-item" data-target="prayerSection" title="مواقيت الصلاة">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -284,7 +284,6 @@
   <!-- Modern Home Hero — v18 UI layer -->
   <section class="home-hero" id="homeHero" aria-label="الرئيسية">
     <div class="hero-topline">
-      <span class="hero-brand">القرآن الكريم</span>
       <span class="hero-live" id="heroLive"><i></i> <span id="heroLiveTxt">جاهز للاستماع</span></span>
     </div>
     <div class="hero-copy">
@@ -299,6 +298,7 @@
       </a>
       <a class="hero-secondary" href="#stationsCard">استكشف الإذاعات</a>
     </div>
+    <p class="hero-trust">مجاني · بلا إعلانات · يعمل دون اتصال</p>
     <div class="hero-glow" aria-hidden="true"></div>
   </section>
 
@@ -307,6 +307,15 @@
        at 1024px+ only. No IDs moved, no JS selectors affected. -->
   <div class="dgrid">
   <!-- Calendar -->
+  <!-- الصلاة القادمة (تظهر بعد حساب المواقيت وتحلّ محل شريط التاريخ؛ التاريخ سطر تحتها) -->
+  <a class="np-chip" id="homeNextPrayer" href="#prayerSection" hidden>
+    <span class="np-chip-main">
+      <span class="np-chip-top"><b class="np-chip-name" id="homeNextName">—</b><span class="np-chip-label" id="homeNextLabel">الصلاة القادمة</span></span>
+      <span class="np-chip-date" id="homeNextDate"></span>
+    </span>
+    <span class="np-chip-count" id="homeNextCount" aria-hidden="true">٠٠:٠٠:٠٠</span>
+    <span class="np-chip-chev" aria-hidden="true">‹</span>
+  </a>
   <section class="cal-card" aria-label="التقويم">
     <div class="cal-block">
       <span class="cal-label">الهجري</span>
@@ -331,7 +340,7 @@
       <span id="npStation">اختر إذاعة</span>
     </div>
     <div>
-      <h2 class="np-title" id="npTitle">القرآن الكريم مباشر</h2>
+      <h2 class="np-title" id="npTitle">ابدأ الاستماع</h2>
       <p class="np-sub">بث مباشر · ٢٤ ساعة</p>
     </div>
     <div class="vwrap" aria-hidden="true">
@@ -405,6 +414,7 @@
       <input type="search" id="stSearch" class="st-search-input" placeholder="ابحث عن إذاعة أو قارئ..." aria-label="البحث في الإذاعات" autocomplete="off"/>
     </div>
     <div class="st-list" id="stList" role="list"></div>
+    <button type="button" class="st-more" id="stMore" aria-controls="stList" aria-expanded="false" hidden>عرض الكل</button>
   </section>
 
   <!-- التلاوات: قراء وسور عند الطلب (مصدر منفصل عن البث المباشر) -->
@@ -503,6 +513,7 @@
         السبحة الرقمية
       </h2>
       <button class="tb-target-badge" id="tbTargetBtn" type="button" aria-label="تغيير الهدف — الهدف الحالي ٩٩ تسبيحة">
+        <span class="tb-target-lbl">الهدف</span>
         <span id="tbTargetNum">٩٩</span>
         <svg class="tb-target-cycle-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M17 2l4 4-4 4"/><path d="M3 11v-1a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v1a4 4 0 0 1-4 4H3"/></svg>
       </button>
@@ -638,7 +649,7 @@
 
     <div class="stg-group">
       <h3 class="stg-group-title">حول التطبيق</h3>
-      <p class="stg-about">القرآن الكريم مباشر — إذاعات بث مباشر، تلاوات، مواقيت الصلاة، الأذكار والسبحة الرقمية. الإصدار ٥.٤.١</p>
+      <p class="stg-about">القرآن الكريم مباشر — إذاعات بث مباشر، تلاوات، مواقيت الصلاة، الأذكار والسبحة الرقمية. الإصدار ٥.٦.١</p>
       <a class="stg-row" href="https://qurankareem.live" target="_blank" rel="noopener noreferrer">
         <span class="stg-row-ic" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg></span>
         <span class="stg-row-txt">qurankareem.live</span>
@@ -654,7 +665,7 @@
       <span class="ftr-dot" aria-hidden="true"></span>
       <span id="ftrMsg">—</span>
     </div>
-    <p>تم التطوير بواسطة <a class="flink" href="https://www.linkedin.com/in/k5aloood" target="_blank" rel="noopener noreferrer" aria-label="خالد سامح على LinkedIn">خالد سامح</a> · <span class="ftr-ver">نسخة ٥.٤.١</span></p>
+    <p>تم التطوير بواسطة <a class="flink" href="https://www.linkedin.com/in/k5aloood" target="_blank" rel="noopener noreferrer" aria-label="خالد سامح على LinkedIn">خالد سامح</a> · <span class="ftr-ver">نسخة ٥.٦.١</span></p>
   </footer>
 
 </div>
@@ -673,13 +684,13 @@
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 6.2c-1.5-1.4-3.6-2.2-6-2.2-1 0-2 .13-3 .4v14.4c1-.27 2-.4 3-.4 2.4 0 4.5.8 6 2.2"/><path d="M12 6.2c1.5-1.4 3.6-2.2 6-2.2 1 0 2 .13 3 .4v14.4c-1-.27-2-.4-3-.4-2.4 0-4.5.8-6 2.2"/><path d="M12 6.2v14.4"/><path d="M8.6 9.3c1.1.4 2.3.4 3.4 0M8.6 12.7c1.1.4 2.3.4 3.4 0"/></svg>
     <span>التلاوات</span>
   </a>
-  <a href="#azCard" class="bnav-item" data-target="azCard">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 10.6 7.4 15 9 10.6 10.6 9 15 7.4 10.6 3 9 7.4 7.4Z" fill="currentColor" fill-opacity=".18"/><path d="M18.5 3v3.4M16.8 4.7h3.4"/></svg>
-    <span>الأذكار</span>
-  </a>
   <a href="#tbCard" class="bnav-item" data-target="tbCard">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3" fill="currentColor" stroke="none"/></svg>
     <span>السبحة</span>
+  </a>
+  <a href="#azCard" class="bnav-item" data-target="azCard">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 3 10.6 7.4 15 9 10.6 10.6 9 15 7.4 10.6 3 9 7.4 7.4Z" fill="currentColor" fill-opacity=".18"/><path d="M18.5 3v3.4M16.8 4.7h3.4"/></svg>
+    <span>الأذكار</span>
   </a>
   <a href="#prayerSection" class="bnav-item" data-target="prayerSection">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>

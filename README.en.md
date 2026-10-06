@@ -6,7 +6,7 @@
 
 [![Live](https://img.shields.io/badge/Live-qurankareem.live-d4af37?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
 [![PWA](https://img.shields.io/badge/PWA-Installable%20%2B%20Offline-7a5a16?style=for-the-badge&logo=pwa&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
-[![Version](https://img.shields.io/badge/version-5.4.1-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-5.6.1-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
 
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f7df1e?style=flat-square&logo=javascript&logoColor=black)
 ![No framework](https://img.shields.io/badge/Framework-none-1c1a13?style=flat-square)
@@ -60,7 +60,7 @@ It is mobile-first (one-hand use), installable on the home screen, and works off
 ### 🕌 Worship
 | Feature | Details |
 |---|---|
-| **Prayer times** | Calculated locally with Adhan; method chosen per country (Umm al-Qura, Egyptian, Dubai, Kuwait, Qatar…), Asr madhab (Shafi/Hanafi), next-prayer countdown, optional sound alert |
+| **Prayer times** | A "next prayer" card with a live countdown on the first screen. Calculated locally with Adhan; method chosen per country (Umm al-Qura, Egyptian, Dubai, Kuwait, Qatar…), Asr madhab (Shafi/Hanafi), next-prayer countdown, optional sound alert |
 | **Qibla** | Compass using device sensors with direction, distance to the Kaaba and alignment states; lazy-loaded on first open |
 | **Azkar** | Morning and evening azkar with counters and daily saved progress |
 | **Digital tasbih** | Counter with an adjustable goal, milestones and a goal-reached message |
@@ -73,7 +73,7 @@ It is mobile-first (one-hand use), installable on the home screen, and works off
 - Honors `prefers-reduced-motion`; status indicators are static (no blinking)
 
 ### 📲 PWA
-- Home-screen install (a quiet banner after 15 s that respects dismissal for 14 days, with manual instructions where automatic install isn't available)
+- Home-screen install: a quiet banner **based on intent** — shown 20 s after you start listening or on the second visit, respects dismissal for 14 days, with manual instructions where automatic install isn't available
 - Separate `any` and `maskable` icons + iOS icon + favicons
 - **Offline:** page and assets are served from cache, with an Arabic fallback page
 - **Safe updates:** a new version shows an "Update now" toast and **never reloads automatically**, so audio isn't interrupted
@@ -131,7 +131,7 @@ A single interactive color; red is reserved for errors.
 ## 🔒 Privacy & security
 
 - **No accounts, no tracking, no ads, no analytics.** All data (favorites, counter, settings…) stays in your browser.
-- **Location:** approximated automatically from IP; **GPS is requested only when you tap**. Clear everything via *Settings → Reset app data*.
+- **Location:** approximated automatically from IP; **GPS is requested only when you tap**. To show the city name in Arabic, the approximate coordinates (derived from IP) are sent once to OpenStreetMap Nominatim and the result is cached. Clear everything via *Settings → Reset app data*.
 - External connections: radio streams, mp3quran.net, location providers, Nominatim, Google Fonts.
 - Local storage is validated before use (types/ranges) and API text is escaped before rendering; no `eval` / `document.write`.
 - The app uses no encryption (and needs none: no secrets, no accounts).
@@ -161,7 +161,7 @@ SLOW=1 bash tests/run_all.sh     # + install-banner test (~40 s)
 
 | Type | Content |
 |---|---|
-| Unit (Node) | Qibla math (25) · cache validation (20, mocked) · prayer countdown (5) |
+| Unit (Node) | Qibla math (25) · cache validation (20, mocked) · prayer countdown (5) · Arabic city name (6) |
 | e2e (Chromium) | full regression (55) · 5.4.0 changes: dialogs/cards/numerals/tablet (67) · corrupt/poisoned storage (17) · SW update flow (7) · install banner (5) · accessibility & contrast scans |
 
 Full results and what is **not** yet verified (real audio, Android/iOS devices, Lighthouse, Firefox/Safari): [`QA_FINAL_REPORT.md`](QA_FINAL_REPORT.md).

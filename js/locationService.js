@@ -37,6 +37,8 @@ const LocationService = (() => {
     try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data })); } catch {}
   };
 
+  const ARABIC_CITY_LOOKUP = true;
+
   // Timeout-safe fetch (compatible with all browsers)
   const fetchWithTimeout = (url, opts, ms) => {
     const ctrl = new AbortController();
@@ -55,9 +57,9 @@ const LocationService = (() => {
     );
   });
 
-  const reverseGeocode = async (lat, lon) => {
+  const reverseGeocode = async (lat, lon, ms = 6000) => {
     const url = `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&accept-language=ar,en`;
-    const r = await fetchWithTimeout(url, { headers: { 'User-Agent': 'QuranLive/3.0' } }, 6000);
+    const r = await fetchWithTimeout(url, { headers: { 'User-Agent': 'QuranLive/3.0' } }, ms);
     if (!r.ok) throw new Error('nominatim_fail');
     const d = await r.json();
     return {
@@ -145,6 +147,16 @@ const LocationService = (() => {
       // 2. Try IP geolocation (صامت — لا يطلب أي إذن من المتصفح)
       try {
         result = await fromIP();
+        /* مزوّدو الـIP يعيدون اسم المدينة بالإنجليزية («Dubai») بجوار دولة بالعربية؛
+           نطلب الاسم العربي مرة واحدة (يُخزَّن مع الكاش) بمهلة قصيرة، ولا نُسقط النتيجة إن فشل الطلب.
+           الخصوصية: تُرسَل الإحداثيات التقريبية (المشتقة من IP) إلى Nominatim — الخدمة نفسها المستخدمة مع GPS.
+           لإيقافه: ARABIC_CITY_LOOKUP = false. */
+        if (ARABIC_CITY_LOOKUP && result && !/[\u0600-\u06FF]/.test(result.city || '')) {
+          try {
+            const geo = await reverseGeocode(result.lat, result.lon, 2500);
+            if (geo && /[\u0600-\u06FF]/.test(geo.city || '')) result.city = geo.city.slice(0, 80);
+          } catch { /* نُبقي اسم المزوّد */ }
+        }
       } catch {
         // 3. Absolute fallback: Mecca
         result = {

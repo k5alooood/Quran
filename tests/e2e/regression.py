@@ -58,6 +58,9 @@ with sync_playwright() as p:
         check(T + 'settings link scrolls + closes menu', pg.evaluate('scrollY') > 400 and pg.evaluate("document.getElementById('appMenu').getAttribute('aria-hidden')") != 'false', pg.evaluate('scrollY'))
         # stations: rapid switching keeps 1 active card, <=2 audio elements
         pg.evaluate('window.scrollTo(0,0)')
+        if pg.locator('#stMore').is_visible():  # v5.6: على الجوال تظهر أول ٥ إذاعات فقط حتى «عرض الكل»
+            pg.click('#stMore')
+            pg.wait_for_timeout(200)
         cards = pg.locator('#stList .st-item')
         n = cards.count()
         for _ in range(3):
