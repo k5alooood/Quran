@@ -6,7 +6,7 @@
 
 [![Live](https://img.shields.io/badge/Live-qurankareem.live-d4af37?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
 [![PWA](https://img.shields.io/badge/PWA-Installable%20%2B%20Offline-7a5a16?style=for-the-badge&logo=pwa&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
-[![Version](https://img.shields.io/badge/version-5.7.0-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-5.7.2-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
 
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f7df1e?style=flat-square&logo=javascript&logoColor=black)
 ![No framework](https://img.shields.io/badge/Framework-none-1c1a13?style=flat-square)

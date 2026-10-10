@@ -193,3 +193,7 @@ html[data-theme="light"] .zi-badge,html[data-theme="light"] .zi-val{color:#5c430
 .rc-resume:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
 /* (5) زر تشغيل المشغّل المصغّر: هدف لمس 44px على الأقل */
 .mbtn{min-width:44px;min-height:44px}
+/* v5.7.1 — حُذف سطر «مجاني · بلا إعلانات · يعمل دون اتصال»: الحشوة السفلية تعوّض مكانه كي لا يبقى فراغ ولا تختلّ الهوية */
+.home-hero{padding:16px 18px 20px}
+.hero-actions{margin-bottom:0}
+@media (min-width:768px){.home-hero{padding:22px 28px 26px}}

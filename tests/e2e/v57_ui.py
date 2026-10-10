@@ -118,6 +118,41 @@ with sync_playwright() as p:
     except Exception as ex:
         check('SECTION CRASHED: offline', False, str(ex)[:160])
 
+    # ---- v5.7.1: hero without the trust line stays balanced (no empty hole)
+    try:
+        for w, h in [(390, 844), (360, 740), (320, 640), (768, 1024)]:
+            ctx, pg = page(b, w, h, touch=True)
+            g = pg.evaluate("(()=>{const r=s=>document.querySelector(s).getBoundingClientRect();const hh=r('.home-hero'),l=r('.hero-live'),c=r('.hero-primary'),s=r('.hero-secondary');return {trust:!!document.querySelector('.hero-trust'),top:Math.round(l.top-hh.top),bottom:Math.round(hh.bottom-Math.max(c.bottom,s.bottom))}})()")
+            check('hero %dpx: trust line gone and bottom gap balances the top gap (diff <= 10px)' % w, (not g['trust']) and 0 <= g['bottom'] - g['top'] <= 10, g)
+            ctx.close()
+    except Exception as ex:
+        check('SECTION CRASHED: hero balance', False, str(ex)[:160])
+
+    # ---- v5.7.1/5.7.2: app icon set integrity (files, sizes, manifest, safe zone, clean SVG)
+    try:
+        from PIL import Image
+        import math
+        mf = json.load(open(os.path.join(ROOT, 'manifest.json'), encoding='utf-8'))
+        srcs = {i['src']: i for i in mf['icons']}
+        want = {'icon-192.png': 192, 'icon-512.png': 512, 'icon-maskable-192.png': 192, 'icon-maskable-512.png': 512, 'icon-180.png': 180, 'favicon-16.png': 16, 'favicon-32.png': 32, 'favicon-48.png': 48}
+        dims = {n: Image.open(os.path.join(ROOT, n)).size for n in want}
+        check('icon PNGs have exact pixel sizes', all(dims[n] == (s, s) for n, s in want.items()), dims)
+        check('manifest icon files all exist', all(os.path.exists(os.path.join(ROOT, k)) for k in srcs), list(srcs))
+        svg = open(os.path.join(ROOT, 'icon.svg'), encoding='utf-8').read()
+        check('icon.svg is clean (no C2PA/metadata, no preserveAspectRatio=none, has a viewBox, <20KB)', 'c2pa' not in svg and '<metadata' not in svg and 'preserveAspectRatio="none"' not in svg and 'viewBox=' in svg and len(svg) < 20000, len(svg))
+        check('icon-simple.svg exists and is small (<8KB)', os.path.getsize(os.path.join(ROOT, 'icon-simple.svg')) < 8000)
+        # maskable safe zone: every non-background pixel inside the central 80% circle
+        im = Image.open(os.path.join(ROOT, 'icon-maskable-512.png')).convert('RGB'); W = im.width; bgc = im.getpixel((2, 2)); worst = 0
+        for y in range(0, W, 2):
+            for x in range(0, W, 2):
+                px = im.getpixel((x, y))
+                if sum(abs(px[i] - bgc[i]) for i in range(3)) > 40:
+                    worst = max(worst, math.hypot(x - W / 2, y - W / 2))
+        check('maskable 512: artwork inside the 80%% safe circle (max radius %.0fpx <= %.0fpx)' % (worst, W * 0.4), worst <= W * 0.4, worst)
+        check('icon-180 is opaque (iOS) and any-icons keep transparent rounded corners', Image.open(os.path.join(ROOT, 'icon-180.png')).mode in ('RGB', 'RGBA') and Image.open(os.path.join(ROOT, 'icon-180.png')).convert('RGBA').getpixel((0, 0))[3] == 255 and Image.open(os.path.join(ROOT, 'icon-512.png')).convert('RGBA').getpixel((0, 0))[3] == 0)
+    except Exception as ex:
+        check('SECTION CRASHED: icons', False, str(ex)[:160])
+
     # ---- desktop 1280: worship stack keeps the reading width, no overflow
     try:
         ctx, pg = page(b, 1280, 900)

@@ -19,8 +19,8 @@
    shortcut work from r27-r29 is retained, only repositioned to fit the new column
    math. Sub-1024px mobile CSS is untouched — confirmed identical byte-length base
    before/after. Cache buster bump only — same caching strategy throughout.) */
-const CACHE_S = 'quran-static-v12-r3';
-const CACHE_P = 'quran-pages-v12-r3';
+const CACHE_S = 'quran-static-v12-r5';
+const CACHE_P = 'quran-pages-v12-r5';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',

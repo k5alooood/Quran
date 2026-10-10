@@ -57,10 +57,10 @@ with sync_playwright() as p:
         try:
             ctx, pg = page(b, w, h)
             m = pg.evaluate("""()=>{const q=s=>document.querySelector(s);const p=q('.hero-primary').getBoundingClientRect(),s=q('.hero-secondary').getBoundingClientRect(),cs=getComputedStyle(q('.hero-secondary'));
-              return {pw:Math.round(p.width),ph:Math.round(p.height),sw:Math.round(s.width),sh:Math.round(s.height),sameRow:Math.abs(p.top+p.height/2-(s.top+s.height/2))<8,bg:cs.backgroundColor,border:cs.borderTopWidth,deco:cs.textDecorationLine,trust:q('.hero-trust').textContent.trim(),ov:document.documentElement.scrollWidth-document.documentElement.clientWidth,hero:Math.round(q('.home-hero').getBoundingClientRect().height)}}""")
+              return {pw:Math.round(p.width),ph:Math.round(p.height),sw:Math.round(s.width),sh:Math.round(s.height),sameRow:Math.abs(p.top+p.height/2-(s.top+s.height/2))<8,bg:cs.backgroundColor,border:cs.borderTopWidth,deco:cs.textDecorationLine,trust:(q('.hero-trust')||{textContent:''}).textContent.trim(),ov:document.documentElement.scrollWidth-document.documentElement.clientWidth,hero:Math.round(q('.home-hero').getBoundingClientRect().height)}}""")
             layout_ok = (m['sameRow'] and m['pw'] >= 150) if w >= 360 else (not m['sameRow'] and m['pw'] >= w - 80)
             check('hero %dpx: secondary is an underlined text link (%s) and the primary stays a full-size button (%dpx)' % (w, 'same row' if w >= 360 else 'stacked below', m['pw']), m['deco'] == 'underline' and m['border'] == '0px' and layout_ok and m['sh'] >= 44 and m['ph'] >= 48, m)
-            check('hero %dpx: trust line present and no overflow' % w, 'مجاني' in m['trust'] and 'بلا إعلانات' in m['trust'] and 'دون اتصال' in m['trust'] and m['ov'] <= 0, m)
+            check('hero %dpx: trust line removed in v5.7.1 and no overflow' % w, m['trust'] == '' and m['ov'] <= 0, m)
             if w == 390:
                 mm = pg.evaluate("(()=>{const n=document.getElementById('npCard').getBoundingClientRect(),nav=document.getElementById('bnav').getBoundingClientRect().top;return {hero:Math.round(document.querySelector('.home-hero').getBoundingClientRect().height),vis:Math.round(Math.max(0,Math.min(n.bottom,nav)-n.top)/n.height*100)}})()")
                 check('hero 390x844: height <=360px (was 348 before the trust line) and player card still >=55%% visible -> %s' % mm, mm['hero'] <= 360 and mm['vis'] >= 55, mm)
