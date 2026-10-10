@@ -808,7 +808,7 @@ function handleDeepLinks(){
       var st=STATIONS.find(function(x){return x.id===sId;});
       if(st)playStation(st);
     }
-    var HASH_ALIASES={azkar:'azCard',prayer:'prayerSection',recite:'reciteCard',stations:'stationsCard',tasbih:'tbCard',tbcard:'tbCard'};
+    var HASH_ALIASES={azkar:'worshipSection',prayer:'prayerSection',recite:'reciteCard',stations:'stationsCard',tasbih:'worshipSection',tbcard:'tbCard',azcard:'azCard'};
     var rawHash=(location.hash||'').replace('#','');
     if(rawHash){
       var targetId=document.getElementById(rawHash)?rawHash:HASH_ALIASES[rawHash];
@@ -944,8 +944,10 @@ function bindUI(){
     if(EL.appMenu)EL.appMenu.classList.remove('open');
     if(EL.menuBtn)EL.menuBtn.setAttribute('aria-expanded','false');
     if(EL.appMenu)EL.appMenu.setAttribute('aria-hidden','true');
+    var bd=g('menuBackdrop');if(bd){bd.classList.remove('open');bd.hidden=true;}
   }
   function openMenu(){
+    var bd=g('menuBackdrop');if(bd){bd.hidden=false;void bd.offsetWidth;bd.classList.add('open');}
     if(EL.appMenu)EL.appMenu.classList.add('open');
     if(EL.menuBtn)EL.menuBtn.setAttribute('aria-expanded','true');
     if(EL.appMenu)EL.appMenu.setAttribute('aria-hidden','false');
@@ -960,6 +962,8 @@ function bindUI(){
   document.addEventListener('click',function(e){
     if(EL.appMenu&&EL.appMenu.classList.contains('open')&&!e.target.closest('.menu-wrap'))closeMenu();
   });
+  /* v5.7: على الجوال تُعرض القائمة كورقة سفلية بخلفية تعتيم؛ لمس الخلفية يغلقها */
+  var menuBd=g('menuBackdrop');if(menuBd)menuBd.addEventListener('click',closeMenu);
   document.addEventListener('keydown',function(e){if(e.key==='Escape')closeMenu();});
   /* إغلاق القائمة تلقائيًا بعد اختيار أي عنصر منها */
   if(EL.appMenu){

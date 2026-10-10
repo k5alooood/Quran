@@ -14,6 +14,7 @@ python3 tests/e2e/sw_update.py | tail -1 || status=1
 python3 tests/e2e/phase_ab.py | tail -1 || status=1
 python3 tests/e2e/layout_containment.py | tail -1 || status=1
 python3 tests/e2e/cro_polish.py | tail -1 || status=1
+python3 tests/e2e/v57_ui.py | tail -1 || status=1
 [ "${SLOW:-0}" = "1" ] && { python3 tests/e2e/install_banner.py | tail -1 || status=1; }   # ~40s
 echo "== accessibility (informational)"; python3 tests/e2e/a11y_scan.py | grep -E "CONTRAST FAILURES|without accessible name|without visible focus"
 exit $status

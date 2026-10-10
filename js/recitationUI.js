@@ -330,7 +330,33 @@ const RecitationUI = (function(){
       reciterId: selectedReciter ? selectedReciter.id : null,
       surahNum: currentSurahNum,
       time: audio.currentTime||0,
-      repeatMode: repeatMode
+      repeatMode: repeatMode,
+      reciterName: selectedReciter ? selectedReciter.name : ''
+    });
+    renderResumeBar();
+  }
+
+  /* v5.7: شريط «آخر تلاوة» — يستأنف آخر سورة محفوظة بنقرة واحدة، ويختفي أثناء تشغيل تلاوة */
+  function renderResumeBar(){
+    var bar = g('rcResume'), sub = g('rcResumeSub');
+    if(!bar) return;
+    var st = lsJSON(STORAGE_KEY);
+    if(st && st.reciterId && st.surahNum>0 && audio && audio.paused){
+      var name = RecitationService.surahName(st.surahNum);
+      var rec = st.reciterName || 'قارئ';
+      if(sub) sub.textContent = 'سورة '+name+' — '+rec;
+      bar.setAttribute('aria-label','تشغيل آخر تلاوة: سورة '+name+' للقارئ '+rec);
+      bar.hidden = false;
+    } else {
+      bar.hidden = true;
+    }
+  }
+  function resumeLast(){
+    var st = lsJSON(STORAGE_KEY);
+    if(!st || !st.riwayahId || !st.reciterId || !st.surahNum) return;
+    selectRiwayah(st.riwayahId, function(list){
+      applyRestoredReciterState(st, list);
+      if(selectedMoshaf) playSurah(st.surahNum, st.time||0);
     });
   }
 
@@ -363,7 +389,10 @@ const RecitationUI = (function(){
 
   /* ═══ ربط أحداث الصوت ═══ */
   function bindAudio(){
-    audio.addEventListener('play', function(){
+    var resumeBtn = g('rcResume');
+    if(resumeBtn) resumeBtn.addEventListener('click', resumeLast);
+    renderResumeBar();
+    audio.addEventListener('play', function(){ renderResumeBar();
       document.dispatchEvent(new Event('qr:played'));
       if(el.playBtn){el.playBtn.querySelector('.i-play').classList.add('hidden');el.playBtn.querySelector('.i-pause').classList.remove('hidden');}
       if(el.player) el.player.classList.add('playing');
@@ -372,7 +401,7 @@ const RecitationUI = (function(){
       announceActive();
       syncMiniIcon(true);
     });
-    audio.addEventListener('pause', function(){
+    audio.addEventListener('pause', function(){ renderResumeBar();
       if(el.playBtn){el.playBtn.querySelector('.i-play').classList.remove('hidden');el.playBtn.querySelector('.i-pause').classList.add('hidden');}
       if(el.player) el.player.classList.remove('playing');
       if(el.npIcon) el.npIcon.classList.remove('playing');
@@ -570,7 +599,7 @@ const RecitationUI = (function(){
       var savedRiwayah = ls('qr_recite_riwayah');
       var defaultId = (savedRiwayah && list.some(function(r){return String(r.id)===String(savedRiwayah);}))
         ? savedRiwayah
-        : (list[0] ? list[0].id : null);
+        : ((list.find(function(r){return /حفص/.test(r.name||'');}) || list[0] || {}).id || null); /* v5.7: حفص عن عاصم افتراضيًا، وإلا أول رواية */
       renderRiwayatPills();
       if(defaultId){
         selectedRiwayahId = defaultId;

@@ -46,7 +46,7 @@ with sync_playwright() as p:
         pg.wait_for_timeout(1500)
         check(T + 'no JS errors on load', not errs, errs[:2])
         check(T + 'theme applied', pg.evaluate("document.documentElement.getAttribute('data-theme')") == theme)
-        check(T + 'bottom nav = 6 items', pg.evaluate("document.querySelectorAll('#bnav .bnav-item').length") == 6)
+        check(T + 'bottom nav = 5 items (v5.7: tasbih merged into the azkar tab)', pg.evaluate("document.querySelectorAll('#bnav .bnav-item').length") == 5)
         check(T + 'no green/teal/blue colors on screen', not pg.evaluate(SCAN), pg.evaluate(SCAN)[:3])
         # header menu -> favorites / settings
         pg.click('#menuBtn')
@@ -65,7 +65,7 @@ with sync_playwright() as p:
         n = cards.count()
         for _ in range(3):
             for i in range(min(n, 8)):
-                cards.nth(i).click(force=True)
+                cards.nth(i).dispatch_event('click')  # اختيار إذاعة يطلق scrollIntoView سلسًا؛ النقر الفعلي أثناء الحركة يسبب سباقًا في Playwright (لا في التطبيق)
                 pg.wait_for_timeout(30)
         pg.wait_for_timeout(500)
         check(T + 'rapid station switching stable', pg.evaluate("document.querySelectorAll('#stList .st-item.active').length") <= 1 and pg.evaluate("document.querySelectorAll('audio').length") <= 2)
