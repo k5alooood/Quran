@@ -37,6 +37,15 @@
     return root;
   }
 
+  /* v5.9.2: نسخة مخزَّنة للقوالب الثابتة المتكررة (أيقونات القوائم…): تُحلَّل مرة واحدة ثم تُستنسخ بـcloneNode.
+     لا تُستخدم مع نصوص متغيّرة (الذاكرة تنمو بعدد النصوص المختلفة)؛ للمتغيّر استعمل tpl() ثم fill(). */
+  var tplCache = Object.create(null);
+  function tplc(html){
+    var proto = tplCache[html];
+    if (!proto) proto = tplCache[html] = tpl(html);
+    return proto.cloneNode(true);
+  }
+
   /* يستبدل محتوى حاوية بقالب ثابت (بديل آمن لـ el.innerHTML = قالب) */
   function setTpl(el, html, map){
     var frag = tpl(html);
@@ -45,5 +54,5 @@
     return el;
   }
 
-  window.SafeDOM = { h: h, tpl: tpl, fill: fill, setTpl: setTpl, SVG_NS: SVG_NS };
+  window.SafeDOM = { h: h, tpl: tpl, tplc: tplc, fill: fill, setTpl: setTpl, SVG_NS: SVG_NS };
 })();

@@ -333,22 +333,23 @@ function syncStCurrent(){
     if(h.parentNode.classList.contains('active'))h.setAttribute('aria-current','true');else h.removeAttribute('aria-current');
   });
 }
-function renderStationList(container,list,emptyMsg){
+function renderStationList(container,list,emptyMsg,cap){
   if(!container)return;
   if(!list.length){container.replaceChildren(SafeDOM.h('p',{class:'no-results',text:emptyMsg}));return;}
   container.replaceChildren();
-  list.forEach(function(st,idx){
+  /* v5.9.2: لا نبني البطاقات المخفية (فوق الحدّ cap) حتى «عرض الكل» — كانت تُبنى كلها وتُخفى بـCSS، وبـ٤١ إذاعة صار ذلك أثقل ما في التحميل */
+  (cap&&list.length>cap?list.slice(0,cap):list).forEach(function(st,idx){
     var isFav=favIds.has(st.id),isActive=currentSt&&currentSt.id===st.id,isPlay=isActive&&isPlaying;
     var div=document.createElement('div');
     div.className='st-item'+(isActive?' active':'')+(isPlay?' playing':'');
     div.setAttribute('role','listitem');div.setAttribute('data-id',st.id);div.setAttribute('data-cat',st.cat);
     div.style.animationDelay=(idx*30)+'ms';
     /* الأيقونات والمرئيات قوالب ثابتة؛ الاسم والتصنيف نصوص تُدرَج بـ textContent */
-    div.appendChild(SafeDOM.tpl(getStIcon(st)));
+    div.appendChild(SafeDOM.tplc(getStIcon(st)));
     div.appendChild(SafeDOM.h('div',{class:'st-info'},[SafeDOM.h('div',{class:'st-name',text:st.name}),SafeDOM.h('span',{class:'st-badge',text:st.cat})]));
-    div.appendChild(SafeDOM.tpl('<div class="st-eq"><span></span><span></span><span></span></div>'));
+    div.appendChild(SafeDOM.tplc('<div class="st-eq"><span></span><span></span><span></span></div>'));
     var fav=SafeDOM.h('button',{class:'st-fav'+(isFav?' saved':''),attrs:{'data-id':st.id,'aria-label':isFav?'إزالة من المفضلة':'إضافة للمفضلة'}});
-    fav.appendChild(SafeDOM.tpl('<svg viewBox="0 0 24 24" fill="'+(isFav?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'));
+    fav.appendChild(SafeDOM.tplc('<svg viewBox="0 0 24 24" fill="'+(isFav?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'));
     div.appendChild(fav);
     var hit=document.createElement('button');hit.type='button';hit.className='st-hit';
     hit.setAttribute('aria-label','تشغيل '+st.name);if(isActive)hit.setAttribute('aria-current','true');
@@ -371,7 +372,7 @@ function renderStations(){
     var q=stSearchQuery.trim().toLowerCase();
     list=list.filter(function(s){return s.name.toLowerCase().indexOf(q)!==-1;});
   }
-  renderStationList(EL.stList,list,(activeCat==='المفضلة'&&!stSearchQuery)?'لا توجد إذاعات في المفضلة بعد — اضغط أيقونة النجمة على أي إذاعة لإضافتها هنا':'لا توجد إذاعات مطابقة');
+  renderStationList(EL.stList,list,(activeCat==='المفضلة'&&!stSearchQuery)?'لا توجد إذاعات في المفضلة بعد — اضغط أيقونة النجمة على أي إذاعة لإضافتها هنا':'لا توجد إذاعات مطابقة',(!stShowAll&&!stSearchQuery)?ST_CAP:0);
   stTotal=list.length;syncStMore();
 }
 function syncStMore(){
@@ -939,7 +940,7 @@ function bindUI(){
   if(EL.rbtn)EL.rbtn.addEventListener('click',manualRetry);
   var debouncedRenderStations=debounce(renderStations,150);
   if(EL.stMore)EL.stMore.addEventListener('click',function(){
-    stShowAll=!stShowAll;syncStMore();
+    stShowAll=!stShowAll;renderStations(); /* يُعاد البناء: عند الطيّ نبني ٥ فقط، وعند «عرض الكل» نبني الكل */
     if(EL.stMore&&!EL.stMore.hidden)EL.stMore.focus({preventScroll:true}); /* يبقى التركيز على الزر (سفاري لا يركّز الأزرار بالنقر) ليتمكن مستخدم لوحة المفاتيح من الطيّ فورًا */
     if(!stShowAll){var sc=g('stationsCard');if(sc)sc.scrollIntoView({block:'nearest',behavior:'smooth'});}
   });

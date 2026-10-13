@@ -213,7 +213,7 @@ const RecitationUI = (function(){
       div.style.animationDelay=(Math.min(idx,20)*20)+'ms';
       div.appendChild(SafeDOM.h('div',{class:'st-icon',attrs:{'aria-hidden':'true'},text:toArabicDigits(num)}));
       div.appendChild(SafeDOM.h('div',{class:'st-info'},[SafeDOM.h('div',{class:'st-name',text:'سورة '+RecitationService.surahName(num)})]));
-      div.appendChild(SafeDOM.tpl('<div class="st-eq"><span></span><span></span><span></span></div>'));
+      div.appendChild(SafeDOM.tplc('<div class="st-eq"><span></span><span></span><span></span></div>'));
       var hitS=document.createElement('button');hitS.type='button';hitS.className='st-hit';
       hitS.setAttribute('aria-label','تشغيل سورة '+RecitationService.surahName(num));
       if(isActive)hitS.setAttribute('aria-current','true');
