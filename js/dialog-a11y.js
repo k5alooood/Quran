@@ -37,6 +37,7 @@
     };
     root.addEventListener('keydown', entry.onKey);
     stack.push(entry);
+    root.setAttribute('aria-modal', 'true'); /* v5.8: يُضاف عند الفتح فقط (كان ثابتًا في HTML حتى والحوار مخفي) */
     /* ننتظر إطارًا ليصبح الحوار ظاهرًا (إزالة hidden) قبل طلب التركيز */
     requestAnimationFrame(function () {
       var target = (opts.initial && root.querySelector(opts.initial)) || focusables(root)[0];
@@ -53,6 +54,7 @@
       if (stack[i].root !== root) continue;
       var entry = stack.splice(i, 1)[0];
       root.removeEventListener('keydown', entry.onKey);
+      root.removeAttribute('aria-modal');
       if (!(opts && opts.restore === false)) {
         if (!safeFocus(entry.opener) || !isVisible(entry.opener)) safeFocus(entry.fallback);
       }

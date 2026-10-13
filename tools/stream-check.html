@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<!-- نفس سياسة CSP في index.html حرفيًا: فأي حجب يظهر هنا هو نفسه ما سيحدث للتطبيق -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; media-src 'self' https: blob:; connect-src 'self' https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'"/>
+<title>فحص روابط البث — القرآن الكريم مباشر</title>
+<style>
+  :root{color-scheme:dark light;--bg:#0e0d0a;--card:#1a1812;--txt:#f4f0e6;--mut:#b3aea2;--ok:#4cc38a;--warn:#e6b94a;--bad:#ef6b5b;--gold:#d4af37}
+  @media (prefers-color-scheme:light){:root{--bg:#f0f1ee;--card:#fff;--txt:#1b1a16;--mut:#5f5c53;--ok:#157a4d;--warn:#8a6100;--bad:#b3261e;--gold:#7a5a16}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--txt);font:16px/1.6 system-ui,"Segoe UI",Tahoma,sans-serif;padding:16px;max-width:900px;margin-inline:auto}
+  h1{font-size:1.3rem;margin:0 0 4px}
+  p.lead{color:var(--mut);margin:0 0 14px}
+  .bar{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+  button{font:inherit;min-height:48px;padding:8px 16px;border-radius:12px;border:1px solid var(--gold);background:var(--card);color:var(--txt);cursor:pointer}
+  button.primary{background:var(--gold);color:#1a1405;font-weight:700}
+  button:disabled{opacity:.5;cursor:default}
+  button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+  #status{min-height:1.6em;color:var(--mut)}
+  .sum{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+  .pill{padding:4px 12px;border-radius:999px;border:1px solid currentColor;font-weight:700}
+  .pill.ok{color:var(--ok)}.pill.warn{color:var(--warn)}.pill.bad{color:var(--bad)}
+  .card{background:var(--card);border-radius:14px;padding:12px 14px;margin:8px 0;border:1px solid rgba(128,128,128,.25)}
+  .card h2{font-size:1rem;margin:0 0 4px;display:flex;justify-content:space-between;gap:8px;align-items:center}
+  .tag{font-size:.8rem;padding:2px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+  .ok{color:var(--ok)}.warn{color:var(--warn)}.bad{color:var(--bad)}.idle{color:var(--mut)}
+  .line{font-size:.88rem;color:var(--mut);word-break:break-all}
+  .line b{color:var(--txt)}
+  textarea{width:100%;min-height:150px;background:var(--card);color:var(--txt);border:1px solid rgba(128,128,128,.4);border-radius:12px;padding:10px;font:13px/1.5 ui-monospace,Consolas,monospace;direction:ltr;text-align:left}
+</style>
+</head>
+<body>
+<h1>فحص روابط البث</h1>
+<p class="lead">يختبر كل محطة بنفس محرّك التطبيق (hls.js للمحطات ‎.m3u8‎ وعنصر الصوت للباقي) على نفس الموقع وتحت نفس سياسة CSP،
+  ثم يجرّب الخادم الاحتياطي إن فشل الأساسي. الصوت مكتوم أثناء الفحص. اضغط «ابدأ» ثم انسخ التقرير وأرسله.</p>
+<div class="bar">
+  <button id="runAll" class="primary" type="button">ابدأ فحص كل المحطات</button>
+  <button id="stop" type="button" disabled>إيقاف</button>
+  <button id="copy" type="button">نسخ التقرير</button>
+</div>
+<div id="status" role="status" aria-live="polite">جارِ تحميل قائمة المحطات…</div>
+<div class="card" id="customBox">
+  <h2 style="margin:0 0 6px">اختبار رابط مخصّص</h2>
+  <p class="line" style="word-break:normal">الصق رابط بث (‎.m3u8‎ أو mp3/aac) لتجربته بنفس المحرّك — مفيد لاختبار روابط تجدها في المواقع الرسمية (مثل إذاعة القرآن في دبي أو أبوظبي) قبل إضافتها للتطبيق.
+    طريقة العثور على الرابط: افتح صفحة البث الرسمية ← F12 ← Network ← اكتب m3u8 أو mp3 أو aac في المرشّح ← شغّل البث ← انسخ الرابط الظاهر.</p>
+  <input id="customUrl" type="url" dir="ltr" placeholder="https://…" aria-label="رابط البث المراد اختباره" style="width:100%;min-height:48px;margin:6px 0;padding:8px 12px;border-radius:12px;border:1px solid rgba(128,128,128,.5);background:var(--bg);color:var(--txt);font:inherit"/>
+  <button id="customRun" type="button">اختبر هذا الرابط</button>
+  <div id="customOut" class="line" role="status" aria-live="polite" style="margin-top:8px"></div>
+</div>
+<div class="sum" id="sum"></div>
+<div id="list"></div>
+<h2 style="font-size:1rem;margin-top:18px">التقرير (نصّي)</h2>
+<textarea id="report" readonly aria-label="التقرير النصي"></textarea>
+<script src="../vendor/hls.min.js" defer></script>
+<script src="stream-check.js" defer></script>
+</body>
+</html>

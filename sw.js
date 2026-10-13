@@ -1,5 +1,23 @@
 'use strict';
 
+/* ══════════════════════════════════════════════════════════════════════════
+   سجلّ الاستراتيجية (v5.8) — اقرأ هذا أولًا قبل تعديل أي شيء في هذا الملف
+   ══════════════════════════════════════════════════════════════════════════
+   الكاشات:
+   • CACHE_S  'quran-static-…'   الأصول الثابتة (CSS/JS/أيقونات/vendor/خط). تُخزَّن مسبقًا (PRECACHE/ASSETS) وتُحدَّث عند كل طلب.
+   • CACHE_P  'quran-pages-…'    الصفحات (index.html وmanifest.json وoffline.html).
+   • 'quran-offline-audio-v1'    تلاوات حفظها المستخدم يدويًا (لا يُمسّ في activate ولا يُرفع رقمه).
+   الاستراتيجيات:
+   • الصفحات والـmanifest: network-first بمهلة 1800ms ثم النسخة المخزّنة، مع revalidation حقيقي (cache:'no-cache').
+   • الأصول المعروفة (ASSETS): network-first أيضًا — كانت staleWhileRevalidate وسببت عرض CSS/JS قديمة بعد النشر.
+   • أي شيء آخر من نفس النطاق: cache-first.
+   • لا تعترض (bypass): البث المباشر وHLS وملفات mp3 وواجهات الموقع والمواقيت والخطوط (انظر BYPASS)؛ الاستثناء الوحيد
+     تلاوة .mp3 محفوظة يدويًا فتُخدَّم من كاش الصوت. صفحة offline.html تُعاد لطلبات التنقّل فقط، وأي طلب آخر يفشل بـ503
+     (كي لا يُخدَّم HTML كأنه صوت أو سكربت).
+   • التحديث: لا skipWaiting تلقائيًا ولا إعادة تحميل تلقائية؛ يصل SKIP_WAITING من زر «تحديث الآن» فقط (تحمي الصوت المشغَّل).
+   متى يُرفع رقم الكاش (CACHE_S/CACHE_P معًا): عند أي تغيير في index.html أو css أو js أو الأيقونات أو manifest أو قائمة PRECACHE/ASSETS؛
+   وكذلك حين تتغير هذه الاستراتيجية. لا حاجة له عند تغيير الوثائق أو الاختبارات فقط. */
+
 /* Quran Kareem Direct — Service Worker v6.0 (r31: desktop shell rewritten from
    scratch, per explicit request after the user viewed r30 live and found it
    "disorganized" despite structurally correct grid/sidebar/nav. Root-caused two
@@ -19,8 +37,8 @@
    shortcut work from r27-r29 is retained, only repositioned to fit the new column
    math. Sub-1024px mobile CSS is untouched — confirmed identical byte-length base
    before/after. Cache buster bump only — same caching strategy throughout.) */
-const CACHE_S = 'quran-static-v12-r5';
-const CACHE_P = 'quran-pages-v12-r5';
+const CACHE_S = 'quran-static-v14-r2';
+const CACHE_P = 'quran-pages-v14-r2';
 
 const PRECACHE = [
   './icon.svg', './icon-180.png', './icon-192.png', './icon-512.png',
@@ -38,6 +56,7 @@ const PAGES = ['./', './index.html', './manifest.json', './offline.html'];
 
 const ASSETS = [
   './css/styles.min.css',
+  './js/boot.js', './js/sw-register.js', './js/safe-dom.js',
   './js/app.js', './js/locationService.js', './js/qiblaService.js', './js/qiblaUI.js',
   './js/prayerService.js', './js/ui.js',
   './js/ui-enhancements.js', './js/pwa-install.js',
@@ -46,7 +65,7 @@ const ASSETS = [
 ];
 
 const BYPASS = [
-  'radiojar.com', 'qurango.net', 'holol.com', 'itworkscdn.net',
+  'radiojar.com', 'qurango.net', 'holol.com', 'itworkscdn.net', 'kwikmotion.com',
   'jsdelivr.net', 'fonts.googleapis.com', 'fonts.gstatic.com',
   'ipapi.co', 'ipwho.is', 'ip-api.com', 'nominatim.openstreetmap.org',
   'api.aladhan.com', 'mp3quran.net'
@@ -115,6 +134,9 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
+  /* v5.8: طلبات الصوت/الفيديو لا تدخل منطق الصفحات أبدًا (مثلًا بث بمسار ينتهي بـ / على نطاق غير مُدرج في BYPASS) */
+  if (event.request.destination === 'audio' || event.request.destination === 'video') return;
+
   if (bypass(event.request.url)) return;
 
   let url;
@@ -171,6 +193,8 @@ async function networkFirst(request, cacheName, timeoutMs = 1800) {
 
   const response = await networkPromise;
   if (response) return response;
+  /* v5.8: صفحة «غير متصل» لطلبات التنقّل فقط؛ غيرها (صوت/سكربت/صورة) يفشل بـ503 بدل أن يتسلّم HTML خاطئ النوع */
+  if (request.mode !== 'navigate') return new Response('', { status: 503 });
   const offlinePage = await caches.match('./offline.html');
   if (offlinePage) return offlinePage;
   return new Response('<h1 dir="rtl">غير متصل</h1>', {

@@ -125,6 +125,9 @@
     deferredPrompt = null;
     manualMode = false;
     hidePrompt(false);
+    /* v5.8: زر «تثبيت» في شاشة الإعدادات كان يبقى كما هو بعد نجاح التثبيت في نفس الجلسة */
+    const stg = $('stgInstallBtn');
+    if (stg) { stg.textContent = 'التطبيق مثبّت بالفعل'; stg.disabled = true; }
   });
 
   document.addEventListener('DOMContentLoaded', () => {

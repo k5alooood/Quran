@@ -90,27 +90,27 @@ const QiblaUI = (() => {
      أما التحديث اللحظي للبوصلة فيتم عبر DOM مباشرة بدون إعادة رسم)
   ══════════════════════════════════════════════════ */
   const renderLocating = () => {
-    bodyEl.innerHTML = `
+    SafeDOM.setTpl(bodyEl, `
       <div class="qibla-center-msg">
         <div class="qibla-spinner" aria-hidden="true"></div>
         <p>جارٍ تحديد موقعك…</p>
-      </div>`;
+      </div>`);
   };
 
   const renderNeedPermission = () => {
-    bodyEl.innerHTML = `
+    SafeDOM.setTpl(bodyEl, `
       <div class="qibla-center-msg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="46" height="46" aria-hidden="true">
           <circle cx="12" cy="12" r="9"/><path d="M12 8v4l2.5 2.5"/>
         </svg>
         <p>لحساب اتجاه القبلة بدقة، يحتاج التطبيق إذنك لاستخدام حساس اتجاه الجهاز (البوصلة).</p>
         <button class="qibla-primary-btn" id="qiblaEnableSensorBtn" type="button">تفعيل البوصلة</button>
-      </div>`;
+      </div>`);
     $('qiblaEnableSensorBtn')?.addEventListener('click', onPermissionButtonClick);
   };
 
   const renderErrorPermission = () => {
-    bodyEl.innerHTML = `
+    SafeDOM.setTpl(bodyEl, `
       <div class="qibla-center-msg qibla-center-msg--warn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="46" height="46" aria-hidden="true">
           <path d="M12 9v4"/><path d="M12 17h.01"/>
@@ -118,26 +118,26 @@ const QiblaUI = (() => {
         </svg>
         <p>تم رفض إذن حساس الاتجاه، فلا يمكن عرض بوصلة حيّة. يمكنك تفعيله من إعدادات المتصفح ثم إعادة المحاولة.</p>
         <button class="qibla-primary-btn" id="qiblaRetryPermBtn" type="button">إعادة المحاولة</button>
-      </div>`;
+      </div>`);
     $('qiblaRetryPermBtn')?.addEventListener('click', () => beginSensors());
   };
 
   const renderErrorLocation = () => {
-    bodyEl.innerHTML = `
+    SafeDOM.setTpl(bodyEl, `
       <div class="qibla-center-msg qibla-center-msg--warn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" width="46" height="46" aria-hidden="true">
           <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
         </svg>
         <p>تعذّر تحديد موقعك، وهو ضروري لحساب اتجاه القبلة. تأكد من إذن الموقع ثم أعد المحاولة.</p>
         <button class="qibla-primary-btn" id="qiblaRetryLocBtn" type="button">إعادة المحاولة</button>
-      </div>`;
+      </div>`);
     $('qiblaRetryLocBtn')?.addEventListener('click', () => open());
   };
 
   /* حالة عدم توفر مستشعر اتجاه على الإطلاق — نعرض المعلومات الثابتة بدل بوصلة حيّة (لا بوصلة وهمية) */
   const renderErrorSensor = () => {
     const dirAr = qiblaBearing != null ? QiblaService.getCompassDirectionAr(qiblaBearing) : '—';
-    bodyEl.innerHTML = `
+    SafeDOM.setTpl(bodyEl, `
       <div class="qibla-center-msg">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" width="46" height="46" aria-hidden="true">
           <rect x="3" y="3" width="18" height="18" rx="3"/><path d="M8 3v18M16 3v18"/>
@@ -148,7 +148,7 @@ const QiblaUI = (() => {
         <span class="qibla-static-deg">${qiblaBearing != null ? fmtDeg(qiblaBearing) : '—'}</span>
         <span class="qibla-static-dir">${dirAr} من الشمال</span>
         ${distanceKm != null ? `<span class="qibla-static-dist">${fmtDist(distanceKm)} إلى الكعبة المشرّفة</span>` : ''}
-      </div>`;
+      </div>`);
   };
 
   const buildTicks = () => {
@@ -163,7 +163,7 @@ const QiblaUI = (() => {
   };
 
   const renderReady = () => {
-    bodyEl.innerHTML = `
+    SafeDOM.setTpl(bodyEl, `
       <div class="qibla-compass-wrap">
         <div class="qibla-top-readout">
           <span class="qtr-label">اتجاه القبلة</span>
@@ -206,7 +206,7 @@ const QiblaUI = (() => {
         ${coords && coords.src === 'fallback' ? `<div class="qibla-fallback-note">تعذّر تحديد موقعك الفعلي — الاتجاه المعروض محسوب من موقع مكة المكرمة الافتراضي وليس موقعك.</div>` : ''}
 
         <p class="qibla-disclaimer">أفضل اتجاه متاح اعتمادًا على مستشعرات جهازك — قد يتأثر بدقة الموقع أو تداخل مغناطيسي قريب، وليس اتجاهًا مضمون الدقة الكاملة.</p>
-      </div>`;
+      </div>`);
 
     ringEl        = $('qiblaRing');
     arrowEl       = $('qiblaArrow');

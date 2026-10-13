@@ -6,7 +6,7 @@
 
 [![الموقع المباشر](https://img.shields.io/badge/Live-qurankareem.live-d4af37?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
 [![PWA](https://img.shields.io/badge/PWA-Installable%20%2B%20Offline-7a5a16?style=for-the-badge&logo=pwa&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
-[![Version](https://img.shields.io/badge/version-5.7.2-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-5.9.1-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
 
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f7df1e?style=flat-square&logo=javascript&logoColor=black)
 ![No framework](https://img.shields.io/badge/Framework-none-1c1a13?style=flat-square)
@@ -53,7 +53,7 @@
 ### 🎧 الاستماع
 | الميزة | التفاصيل |
 |---|---|
-| **إذاعات مباشرة** | زر «استمع الآن» يشغّل **آخر إذاعة استمعتَ إليها** (أو الافتراضية). 19 بثًّا: 6 إذاعات رسمية (القرآن الكريم، الحرم المكي والمدني، الشارقة، التفسير، الرقية) و13 قارئًا. بحث وفلاتر (الكل / المفضلة / رسمية / قرّاء) |
+| **إذاعات مباشرة** | زر «استمع الآن» يشغّل **آخر إذاعة استمعتَ إليها** (أو الافتراضية). 41 بثًّا: 9 إذاعات رسمية (القرآن الكريم من القاهرة، السعودية، الحرم المكي والمدني، الشارقة، الدوحة ×2، التفسير، الرقية) و32 قارئًا. بحث وفلاتر (الكل / المفضلة / رسمية / قرّاء) |
 | **تلاوات كاملة** | اختيار الرواية (حفص، ورش، قالون…) ثم القارئ ثم السورة، مع السابق/التالي واستعادة آخر حالة. البيانات من واجهة [mp3quran.net](https://mp3quran.net) |
 | **حفظ للتلاوات دون اتصال** | حفظ سور محددة في ذاكرة المتصفح للاستماع بلا إنترنت |
 | **مشغّل مصغّر** | يتحكم في الإذاعة أو التلاوة (المصدر النشط واضح دائمًا) مع Media Session لأزرار قفل الشاشة |

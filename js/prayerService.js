@@ -29,6 +29,19 @@ const PrayerService = (() => {
     MY: 'Singapore', SG: 'Singapore', ID: 'Singapore',
   };
 
+  /* v5.8: المسار الاحتياطي (Aladhan API) كان يستخدم method=3 (MWL) لكل الدول. الآن يُشتق رقم الطريقة من METHOD_MAP نفسها
+     (جدول واحد للحقيقة) كي تتطابق نتيجة المسارين لنفس الدولة. أرقام Aladhan الرسمية: 1=كراتشي، 2=ISNA، 3=MWL، 4=أم القرى،
+     5=المصرية، 7=طهران، 9=الكويت، 10=قطر، 11=سنغافورة، 13=ديانت تركيا، 15=لجنة رؤية الهلال، 16=دبي (تحقّقت منها من توثيق Aladhan).
+     ملاحظة: فرنسا/بلجيكا في المسار الأساسي = لجنة رؤية الهلال (15) وليست UOIF (12)، فاعتُمد 15 هنا للاتساق. */
+  const ADHAN_KEY_TO_API = {
+    UmmAlQura: '4', Dubai: '16', Kuwait: '9', Qatar: '10', Egyptian: '5', Tehran: '7', Turkey: '13',
+    Karachi: '1', MoonsightingCommittee: '15', MWL: '3', NorthAmerica: '2', Singapore: '11',
+  };
+  const API_METHOD_MAP = {};
+  Object.keys(METHOD_MAP).forEach(cc => { API_METHOD_MAP[cc] = ADHAN_KEY_TO_API[METHOD_MAP[cc]] || '3'; });
+  /* دولة غير معروفة → MWL (3) كما كان سلوك المسار الاحتياطي دائمًا */
+  const apiMethodFor = countryCode => API_METHOD_MAP[countryCode] || '3';
+
   const PRAYER_NAMES_AR = {
     fajr: 'الفجر', sunrise: 'الشروق', dhuhr: 'الظهر',
     asr: 'العصر', maghrib: 'المغرب', isha: 'العشاء',
@@ -189,7 +202,7 @@ const PrayerService = (() => {
     return buildPrayerList(times, fmt, fmtRaw, methodKey);
   };
 
-  const calcFromAPI = async (lat, lon, timezone, madhab) => {
+  const calcFromAPI = async (lat, lon, timezone, madhab, countryCode) => {
     const now = new Date();
     const d = `${now.getDate()}-${now.getMonth() + 1}-${now.getFullYear()}`;
     const school = madhab === 'hanafi' ? 1 : 0;
@@ -198,7 +211,7 @@ const PrayerService = (() => {
     let r;
     try {
       r = await fetch(
-        `https://api.aladhan.com/v1/timings/${d}?latitude=${lat}&longitude=${lon}&method=3&school=${school}`,
+        `https://api.aladhan.com/v1/timings/${d}?latitude=${lat}&longitude=${lon}&method=${apiMethodFor(countryCode)}&school=${school}`,
         { signal: ctrl.signal }
       );
     } finally {
@@ -296,10 +309,13 @@ const PrayerService = (() => {
   /* v5.1: التحقق أن مواقيت الصلاة الستة منطقية ومتسلسلة زمنيًا (كل صلاة بعد التي تسبقها)
      كما طُلب صراحة — هذا يحمي من عرض مواقيت فاسدة لو حدث خلل في المكتبة أو في استجابة
      الـ API الاحتياطي (مثلاً بسبب تحويل توقيت خاطئ) بدل عرضها للمستخدم دون تحقق. */
+  /* v5.8: تسامح ±60 ثانية بين صلاتين متتاليتين — في خطوط العرض العالية صيفًا قد يتطابق الفجر والشروق (أو العشاء) أو
+     يتبادلان ترتيبًا بثوانٍ بسبب التقريب، فكان التحقق الصارم (>) يرفض مواقيت صحيحة ويُسقط التطبيق إلى مسار أبطأ. */
+  const SEQ_TOLERANCE_MS = 60000;
   const isSequential = prayers => {
     if (!Array.isArray(prayers) || prayers.length !== 6) return false;
     for (let i = 1; i < prayers.length; i++) {
-      if (!(prayers[i].ts > prayers[i - 1].ts)) return false;
+      if (!(prayers[i].ts >= prayers[i - 1].ts - SEQ_TOLERANCE_MS)) return false;
     }
     return true;
   };
@@ -316,7 +332,7 @@ const PrayerService = (() => {
 
     if (!prayers) {
       try {
-        const viaAPI = await calcFromAPI(lat, lon, timezone, madhab);
+        const viaAPI = await calcFromAPI(lat, lon, timezone, madhab, countryCode);
         if (isSequential(viaAPI)) prayers = viaAPI;
       } catch { /* فشل الـ API أيضًا — سيُرجَع null أدناه */ }
     }
@@ -363,5 +379,5 @@ const PrayerService = (() => {
     return `${ar(sec)} ث`;
   };
 
-  return { getPrayers, getNextPrayer, formatCountdown, formatCountdownWords };
+  return { getPrayers, getNextPrayer, formatCountdown, formatCountdownWords, API_METHOD_MAP, apiMethodFor, isSequential };
 })();

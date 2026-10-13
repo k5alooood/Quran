@@ -70,11 +70,7 @@ const PrayerUI = (() => {
 
   const getCountryAr = cc => COUNTRY_AR[cc] || locationData?.country || cc || '';
 
-  /* يُهرِب أي نص خارجي (مثل اسم المدينة/الدولة القادم من خدمات الموقع الخارجية)
-     قبل إدراجه ضمن قالب HTML عبر innerHTML، لمنع XSS دون التأثير على الوسم الثابت */
-  const escapeHTML = str => String(str).replace(/[&<>"']/g, c => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  }[c]));
+  /* v5.8: لا حاجة لدالة تهريب هنا — الحقول الخارجية تُدرَج بـ textContent عبر SafeDOM (انظر makePrayerCardHTML) */
 
   /* ══════════════════════════════════════════════════
      قائمة المدن (للاختيار اليدوي)
@@ -223,11 +219,13 @@ const PrayerUI = (() => {
   /* Prayer card (main) */
   const makePrayerCardHTML = (prayers, next, loc, isFallback, manualBtnId) => {
     const flag        = getFlagEmoji(loc?.countryCode || '');
-    const countryAr   = escapeHTML(getCountryAr(loc?.countryCode || ''));
-    const city        = escapeHTML(loc?.city || '');
+    /* v5.8: النصوص المصدرها خارجي (مدينة/دولة/طريقة الحساب) لا تدخل القالب أبدًا — تُملأ لاحقًا بـ textContent
+       عبر حقول data-f، وaria-label للعلَم يُضبط بـ setAttribute؛ فلا حاجة للتهريب ولا مجال لحقن وسوم */
+    const countryAr   = getCountryAr(loc?.countryCode || '');
+    const city        = loc?.city || '';
     const methodLabel = prayers[0]?.method || 'مواقيت الصلاة';
 
-    return `
+    const html = `
       ${makeSectionTitleHTML(`
         ${makeBellBtnHTML()}
         <button class="pt-refresh-btn" id="ptRefreshBtn" title="تحديث الموقع" aria-label="تحديث الموقع">
@@ -240,13 +238,13 @@ const PrayerUI = (() => {
       ${isFallback ? makeFallbackNoticeHTML(manualBtnId) : ''}
       <div class="pt-header">
         <div class="pt-location">
-          <span class="pt-flag" role="img" aria-label="${countryAr}">${flag}</span>
+          <span class="pt-flag" role="img">${flag}</span>
           <div class="pt-loc-text">
-            <span class="pt-city">${city}</span>
-            <span class="pt-country">${countryAr}</span>
+            <span class="pt-city" data-f="city"></span>
+            <span class="pt-country" data-f="country"></span>
           </div>
         </div>
-        <span class="pt-method-badge">${methodLabel}</span>
+        <span class="pt-method-badge" data-f="method"></span>
         <button class="pt-madhab-btn" id="ptMadhabBtn" type="button" title="تبديل المذهب الفقهي لحساب وقت العصر">
           ${getMadhab() === 'hanafi' ? 'حنفي' : 'شافعي'}
         </button>
@@ -266,6 +264,11 @@ const PrayerUI = (() => {
             <div class="pt-p-time">${p.timeStr}</div>
           </div>`).join('')}
       </div>`;
+    return {
+      html,
+      fields: { city, country: countryAr, method: methodLabel },
+      post: root => { const f = root.querySelector('.pt-flag'); if (f) f.setAttribute('aria-label', countryAr); }
+    };
   };
 
   /* ══════════════════════════════════════════════════
@@ -299,14 +302,14 @@ const PrayerUI = (() => {
     flash.className = 'prayer-flash';
     flash.setAttribute('role', 'alert');
     flash.setAttribute('aria-live', 'assertive');
-    flash.innerHTML = `
+    SafeDOM.setTpl(flash, `
       <div class="prayer-flash__inner">
         <div class="pf-icon" aria-hidden="true">🕌</div>
         <div class="pf-text">
-          <strong>حان وقت صلاة ${prayerName}</strong>
-          <span>اللهم بلّغنا صلاة ${prayerName}</span>
+          <strong data-f="t1"></strong>
+          <span data-f="t2"></span>
         </div>
-      </div>`;
+      </div>`, { t1: 'حان وقت صلاة ' + prayerName, t2: 'اللهم بلّغنا صلاة ' + prayerName });
     document.body.appendChild(flash);
 
     requestAnimationFrame(() => requestAnimationFrame(() => flash.classList.add('pf-show')));
@@ -504,10 +507,12 @@ const PrayerUI = (() => {
     return sec;
   };
 
-  const renderHTML = html => {
+  const renderHTML = view => {
     const sec = getSection();
     sec.style.opacity = '0';
-    sec.innerHTML = html;
+    const isObj = view && typeof view === 'object';
+    SafeDOM.setTpl(sec, isObj ? view.html : view, isObj ? view.fields : null);
+    if (isObj && view.post) view.post(sec);
     requestAnimationFrame(() => {
       sec.style.transition = 'opacity .38s ease';
       sec.style.opacity    = '1';

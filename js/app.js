@@ -6,25 +6,47 @@
    STATIONS — v6 exact URLs
 ═══════════════════════════════════════════ */
 var STATIONS=[
-  {id:'eg',    name:'إذاعة القرآن الكريم',        cat:'رسمية', country:'🇪🇬', url:'https://stream.radiojar.com/8s5u5tpdtwzuv',                  bk:'https://n8.radiojar.com/8s5u5tpdtwzuv'},
-  {id:'ksa',   name:'بث الحرم المكي — قرآن',      cat:'رسمية', country:'🇸🇦', url:'https://win.holol.com/live/quran/playlist.m3u8',              bk:'https://Qurango.net/radio/tarateel'},
-  {id:'ksa2',  name:'بث الحرم المدني — سُنة',     cat:'رسمية', country:'🇸🇦', url:'https://win.holol.com/live/sunnah/playlist.m3u8',             bk:'https://Qurango.net/radio/tarteel'},
-  {id:'shj',   name:'إذاعة الشارقة للقرآن',       cat:'رسمية', country:'🇦🇪', url:'https://svs.itworkscdn.net/smcquranlive/quranradiolive/playlist.m3u8', bk:'https://Qurango.net/radio/quran_kareem'},
-  {id:'tafs',  name:'إذاعة تفسير القرآن',         cat:'رسمية', country:'📚',  url:'https://qurango.net/radio/tafseer',                           bk:'https://backup.qurango.net/radio/tafseer'},
-  {id:'ruq',   name:'إذاعة الرقية الشرعية',       cat:'رسمية', country:'🛡️', url:'https://qurango.net/radio/roqiah',                            bk:'https://backup.qurango.net/radio/roqiah'},
-  {id:'basit', name:'عبد الباسط عبد الصمد',       cat:'قراء',  country:'🇪🇬', url:'https://qurango.net/radio/abdulbasit_abdulsamad_mojawwad',   bk:'https://backup.qurango.net/radio/abdulbasit_abdulsamad_mojawwad'},
-  {id:'husr',  name:'محمود خليل الحصري',          cat:'قراء',  country:'🇪🇬', url:'https://qurango.net/radio/mahmoud_khalil_alhussary',         bk:'https://backup.qurango.net/radio/mahmoud_khalil_alhussary'},
-  {id:'minsh', name:'محمد صديق المنشاوي',         cat:'قراء',  country:'🇪🇬', url:'https://qurango.net/radio/mohammed_siddiq_alminshawi',      bk:'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi'},
-  {id:'afs',   name:'مشاري بن راشد العفاسي',      cat:'قراء',  country:'🇰🇼', url:'https://qurango.net/radio/mishary_alafasi',                  bk:'https://backup.qurango.net/radio/mishary_alafasi'},
-  {id:'sds',   name:'عبد الرحمن السديس',          cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/abdulrahman_alsudaes',             bk:'https://backup.qurango.net/radio/abdulrahman_alsudaes'},
-  {id:'shur',  name:'سعود الشريم',                cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/saud_alshuraim',                   bk:'https://backup.qurango.net/radio/saud_alshuraim'},
-  {id:'maher', name:'ماهر المعيقلي',              cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/maher_al_muaiqly',                 bk:'https://backup.qurango.net/radio/maher_al_muaiqly'},
-  {id:'yasser',name:'ياسر الدوسري',               cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/yasser_aldosari',                  bk:'https://backup.qurango.net/radio/yasser_aldosari'},
-  {id:'fares', name:'فارس عباد',                  cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/fares_abbad',                      bk:'https://backup.qurango.net/radio/fares_abbad'},
-  {id:'saad',  name:'سعد الغامدي',                cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/saad_alghamdi',                    bk:'https://backup.qurango.net/radio/saad_alghamdi'},
-  {id:'jaber', name:'علي جابر',                   cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/ali_jaber',                        bk:'https://backup.qurango.net/radio/ali_jaber'},
-  {id:'ayyub', name:'محمد أيوب',                  cat:'قراء',  country:'🇸🇦', url:'https://qurango.net/radio/mohammed_ayyub',                   bk:'https://backup.qurango.net/radio/mohammed_ayyub'},
-  {id:'ajm',   name:'أحمد العجمي',                cat:'قراء',  country:'🇰🇼', url:'https://qurango.net/radio/ahmad_alajmy',                     bk:'https://backup.qurango.net/radio/ahmad_alajmy'}
+  {id:'eg', name:'إذاعة القرآن الكريم القاهرة', cat:'رسمية', country:'🇪🇬', url:'https://stream.radiojar.com/8s5u5tpdtwzuv', bk:'https://n8.radiojar.com/8s5u5tpdtwzuv'},
+  {id:'shj', name:'إذاعة القرآن الكريم الشارقة', cat:'رسمية', country:'🇦🇪', url:'https://l3.itworkscdn.net/smcquranlive/quranradiolive/icecast.audio', bk:'https://live.kwikmotion.com/smcquranlive/quranradiolive/playlist.m3u8'},
+  {id:'sau', name:'إذاعة القرآن الكريم السعودية', cat:'رسمية', country:'🇸🇦', url:'https://live.kwikmotion.com/sbrksaquranradiolive/ksaquranradio/playlist.m3u8', bk:'https://stream.radiojar.com/0tpy1h0kxtzuv'},
+  {id:'ksa', name:'بث الحرم المكي', cat:'رسمية', country:'🇸🇦', url:'https://win.holol.com/live/quran/playlist.m3u8', bk:'https://stream.radiojar.com/0tpy1h0kxtzuv'},
+  {id:'ksa2', name:'بث الحرم المدني', cat:'رسمية', country:'🇸🇦', url:'https://win.holol.com/live/sunnah/playlist.m3u8', bk:'https://stream.radiojar.com/0tpy1h0kxtzuv'},
+  {id:'qa1', name:'إذاعة القرآن الكريم الدوحة', cat:'رسمية', country:'🇶🇦', url:'https://live.kwikmotion.com/qmcquranradiolive/quranradio/playlist.m3u8', bk:'https://live.kwikmotion.com/qmcquranradio2live/quranradio2/playlist.m3u8'},
+  {id:'qa2', name:'إذاعة القرآن الكريم الدوحة ٢', cat:'رسمية', country:'🇶🇦', url:'https://live.kwikmotion.com/qmcquranradio2live/quranradio2/playlist.m3u8', bk:'https://live.kwikmotion.com/qmcquranradiolive/quranradio/playlist.m3u8'},
+  {id:'tafs', name:'إذاعة التفسير', cat:'رسمية', country:'📚', url:'https://backup.qurango.net/radio/tafseer', bk:'https://qurango.net/radio/tafseer'},
+  {id:'ruq', name:'إذاعة الرقية', cat:'رسمية', country:'🛡️', url:'https://backup.qurango.net/radio/roqiah', bk:'https://qurango.net/radio/roqiah'},
+  {id:'basit', name:'عبد الباسط — مجوّد', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/abdulbasit_abdulsamad_mojawwad', bk:'https://qurango.net/radio/abdulbasit_abdulsamad_mojawwad'},
+  {id:'basit2', name:'عبد الباسط — مرتل', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/abdulbasit_abdulsamad', bk:'https://qurango.net/radio/abdulbasit_abdulsamad'},
+  {id:'husr', name:'محمود خليل الحصري', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/mahmoud_khalil_alhussary', bk:'https://qurango.net/radio/mahmoud_khalil_alhussary'},
+  {id:'minsh', name:'محمد صديق المنشاوي', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/mohammed_siddiq_alminshawi', bk:'https://qurango.net/radio/mohammed_siddiq_alminshawi'},
+  {id:'mustafa', name:'مصطفى إسماعيل', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/mustafa_ismail', bk:'https://qurango.net/radio/mustafa_ismail'},
+  {id:'banna', name:'محمود علي البنا', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/mahmoud_ali__albanna', bk:'https://qurango.net/radio/mahmoud_ali__albanna'},
+  {id:'tablawi', name:'محمد الطبلاوي', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/mohammad_altablaway', bk:'https://qurango.net/radio/mohammad_altablaway'},
+  {id:'jibreel', name:'محمد جبريل', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/mohammed_jibreel', bk:'https://qurango.net/radio/mohammed_jibreel'},
+  {id:'naina', name:'أحمد نعينع', cat:'قراء', country:'🇪🇬', url:'https://backup.qurango.net/radio/ahmad_nauina', bk:'https://qurango.net/radio/ahmad_nauina'},
+  {id:'afs', name:'مشاري العفاسي', cat:'قراء', country:'🇰🇼', url:'https://backup.qurango.net/radio/mishary_alafasi', bk:'https://qurango.net/radio/mishary_alafasi'},
+  {id:'mazrouei', name:'ياسر المزروعي — يعقوب', cat:'قراء', country:'🇰🇼', url:'https://backup.qurango.net/radio/yasser_almazroyee', bk:'https://qurango.net/radio/yasser_almazroyee'},
+  {id:'sds', name:'عبد الرحمن السديس', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/abdulrahman_alsudaes', bk:'https://qurango.net/radio/abdulrahman_alsudaes'},
+  {id:'shur', name:'سعود الشريم', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/saud_alshuraim', bk:'https://qurango.net/radio/saud_alshuraim'},
+  {id:'maher', name:'ماهر المعيقلي', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/maher', bk:'https://qurango.net/radio/maher'},
+  {id:'saad', name:'سعد الغامدي', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/saad_alghamdi', bk:'https://qurango.net/radio/saad_alghamdi'},
+  {id:'yasser', name:'ياسر الدوسري', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/yasser_aldosari', bk:'https://qurango.net/radio/yasser_aldosari'},
+  {id:'qatami', name:'ناصر القطامي', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/nasser_alqatami', bk:'https://qurango.net/radio/nasser_alqatami'},
+  {id:'ajm', name:'أحمد العجمي', cat:'قراء', country:'🇰🇼', url:'https://backup.qurango.net/radio/ahmad_alajmy', bk:'https://qurango.net/radio/ahmad_alajmy'},
+  {id:'hudhaifi', name:'علي الحذيفي', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/ali_alhuthaifi', bk:'https://qurango.net/radio/ali_alhuthaifi'},
+  {id:'juhani', name:'عبد الله الجهني', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/abdullah_aljohany', bk:'https://qurango.net/radio/abdullah_aljohany'},
+  {id:'qasim', name:'عبد المحسن القاسم', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/abdulmohsen_alqasim', bk:'https://qurango.net/radio/abdulmohsen_alqasim'},
+  {id:'luhaidan', name:'محمد اللحيدان', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/mohammed_allohaidan', bk:'https://qurango.net/radio/mohammed_allohaidan'},
+  {id:'ayyub', name:'محمد أيوب', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/mohammed_ayyub', bk:'https://qurango.net/radio/mohammed_ayyub'},
+  {id:'fares', name:'فارس عباد', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/fares_abbad', bk:'https://qurango.net/radio/fares_abbad'},
+  {id:'shatri', name:'أبو بكر الشاطري', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/shaik_abu_bakr_al_shatri', bk:'https://qurango.net/radio/shaik_abu_bakr_al_shatri'},
+  {id:'abkar', name:'إدريس أبكر', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/idrees_abkr', bk:'https://qurango.net/radio/idrees_abkr'},
+  {id:'jaber', name:'علي جابر', cat:'قراء', country:'🇸🇦', url:'https://backup.qurango.net/radio/ali_jaber', bk:'https://qurango.net/radio/ali_jaber'},
+  {id:'bukhatir', name:'صلاح بو خاطر', cat:'قراء', country:'🇦🇪', url:'https://backup.qurango.net/radio/slaah_bukhatir', bk:'https://qurango.net/radio/slaah_bukhatir'},
+  {id:'tunaiji', name:'خليفة الطنيجي', cat:'قراء', country:'🇦🇪', url:'https://backup.qurango.net/radio/khalifa_altunaiji', bk:'https://qurango.net/radio/khalifa_altunaiji'},
+  {id:'qazabri', name:'عمر القزابري — ورش', cat:'قراء', country:'🇲🇦', url:'https://backup.qurango.net/radio/omar_alqazabri', bk:'https://qurango.net/radio/omar_alqazabri'},
+  {id:'kouchi', name:'العيون الكوشي — ورش', cat:'قراء', country:'🇲🇦', url:'https://backup.qurango.net/radio/aloyoon_alkoshi', bk:'https://qurango.net/radio/aloyoon_alkoshi'},
+  {id:'zain', name:'الزين محمد أحمد', cat:'قراء', country:'🇸🇩', url:'https://backup.qurango.net/radio/alzain_mohammad_ahmad', bk:'https://qurango.net/radio/alzain_mohammad_ahmad'}
 ];
 
 /* ═══════════════════════════════════════════
@@ -238,7 +260,10 @@ function saveAzProg(){ls('qr_azprog',JSON.stringify(azProg))}
 function applyTheme(t,save){
   if(t!=='dark'&&t!=='light')t='dark';
   theme=t;EL.html.setAttribute('data-theme',t);
-  if(EL.themeColorMeta)EL.themeColorMeta.setAttribute('content',t==='dark'?'#0e0d0a':'#f0f1ee');
+  /* v5.8: القيمة من --meta-theme-color في CSS (مصدر واحد)، والاحتياط القيم القديمة؛ تُحدَّث كل وسوم theme-color
+     (الوسوم ذات media تعطي لونًا أوليًا حسب النظام قبل تشغيل JS، ثم نوحّدها على الثيم الفعلي حتى لا يتعارض الاختيار اليدوي) */
+  var tc=(getComputedStyle(EL.html).getPropertyValue('--meta-theme-color')||'').trim()||(t==='dark'?'#0e0d0a':'#f0f1ee');
+  document.querySelectorAll('meta[name="theme-color"]').forEach(function(m){m.setAttribute('content',tc);});
   /* عنوان عنصر القائمة يصف الإجراء القادم: في الوضع الداكن يظهر "الوضع الفاتح" والعكس */
   if(EL.thbtnLabel)EL.thbtnLabel.textContent=t==='dark'?'الوضع الفاتح':'الوضع الداكن';
   if(EL.thbtn)EL.thbtn.setAttribute('aria-pressed',t==='light'?'true':'false');
@@ -269,18 +294,21 @@ function syncSettingsThemeUI(){
 /* ═══════════════════════════════════════════
    STATIONS — custom pill filter
 ═══════════════════════════════════════════ */
+var catBtns=[]; /* مراجع أزرار التصفية: تُبنى مرة واحدة ثم تُحدَّث حالتها فقط، فلا يضيع تركيز لوحة المفاتيح */
 function renderCatSelect(){
   if(!EL.catPills)return;
-  EL.catPills.innerHTML='';
-  CATS.forEach(function(c){
-    var btn=document.createElement('button');
-    var active=c===activeCat;
-    btn.className='cat-pill'+(active?' cat-pill--active':'');
-    btn.type='button';
-    btn.setAttribute('role','tab'); /* v30: أبناء عنصر role=tablist لازم يكون لهم role=tab صريح */
-    btn.setAttribute('aria-selected',active?'true':'false');
-    btn.textContent=c;btn.dataset.cat=c;
-    EL.catPills.appendChild(btn);
+  if(!catBtns.length){
+    CATS.forEach(function(c){
+      var btn=document.createElement('button');
+      btn.type='button';btn.className='cat-pill';
+      btn.textContent=c;btn.dataset.cat=c;
+      EL.catPills.appendChild(btn);catBtns.push(btn);
+    });
+  }
+  catBtns.forEach(function(btn){
+    var active=btn.dataset.cat===activeCat;
+    btn.classList.toggle('cat-pill--active',active);
+    btn.setAttribute('aria-pressed',active?'true':'false'); /* أزرار تصفية وليست تبويبات (ARIA APG) */
   });
 }
 if(document.getElementById('catPills')){
@@ -307,25 +335,26 @@ function syncStCurrent(){
 }
 function renderStationList(container,list,emptyMsg){
   if(!container)return;
-  if(!list.length){container.innerHTML='<p class="no-results">'+emptyMsg+'</p>';return;}
-  container.innerHTML='';
+  if(!list.length){container.replaceChildren(SafeDOM.h('p',{class:'no-results',text:emptyMsg}));return;}
+  container.replaceChildren();
   list.forEach(function(st,idx){
     var isFav=favIds.has(st.id),isActive=currentSt&&currentSt.id===st.id,isPlay=isActive&&isPlaying;
     var div=document.createElement('div');
     div.className='st-item'+(isActive?' active':'')+(isPlay?' playing':'');
     div.setAttribute('role','listitem');div.setAttribute('data-id',st.id);div.setAttribute('data-cat',st.cat);
     div.style.animationDelay=(idx*30)+'ms';
-    div.innerHTML=getStIcon(st)+
-      '<div class="st-info"><div class="st-name">'+st.name+'</div><span class="st-badge">'+st.cat+'</span></div>'+
-      '<div class="st-eq"><span></span><span></span><span></span></div>'+
-      '<button class="st-fav'+(isFav?' saved':'')+'\" data-id="'+st.id+'" aria-label="'+(isFav?'إزالة من المفضلة':'إضافة للمفضلة')+'">'+
-        '<svg viewBox="0 0 24 24" fill="'+(isFav?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'+
-      '</button>';
+    /* الأيقونات والمرئيات قوالب ثابتة؛ الاسم والتصنيف نصوص تُدرَج بـ textContent */
+    div.appendChild(SafeDOM.tpl(getStIcon(st)));
+    div.appendChild(SafeDOM.h('div',{class:'st-info'},[SafeDOM.h('div',{class:'st-name',text:st.name}),SafeDOM.h('span',{class:'st-badge',text:st.cat})]));
+    div.appendChild(SafeDOM.tpl('<div class="st-eq"><span></span><span></span><span></span></div>'));
+    var fav=SafeDOM.h('button',{class:'st-fav'+(isFav?' saved':''),attrs:{'data-id':st.id,'aria-label':isFav?'إزالة من المفضلة':'إضافة للمفضلة'}});
+    fav.appendChild(SafeDOM.tpl('<svg viewBox="0 0 24 24" fill="'+(isFav?'currentColor':'none')+'" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'));
+    div.appendChild(fav);
     var hit=document.createElement('button');hit.type='button';hit.className='st-hit';
     hit.setAttribute('aria-label','تشغيل '+st.name);if(isActive)hit.setAttribute('aria-current','true');
     div.insertBefore(hit,div.firstChild);
     div.addEventListener('click',function(e){if(e.target.closest('.st-fav'))return;playStation(st);});
-    div.querySelector('.st-fav').addEventListener('click',function(e){e.stopPropagation();toggleFav(st.id,this);});
+    fav.addEventListener('click',function(e){e.stopPropagation();toggleFav(st.id,this);});
     container.appendChild(div);
   });
 }
@@ -526,7 +555,11 @@ function stop(){
 }
 function togglePlay(){
   if(!currentSt&&!isPlaying&&!isLoading){playStation(STATIONS[0]);return;}
-  if(isPlaying||isLoading)stop();else startAudio();
+  if(isPlaying||isLoading){stop();return;}
+  /* v5.8: محطة مستعادة من آخر زيارة (qr_last) أو مختارة برابط عميق لا يكون لها مصدر صوت محمَّل بعد؛
+     كان الضغط على زر التشغيل يستدعي audio.play() على عنصر بلا src فلا يحدث شيء. نحمّلها أولًا عبر playStation. */
+  if(currentSt&&!audio.getAttribute('src')&&!hlsInst){playStation(currentSt);return;}
+  startAudio();
 }
 
 /* ═══════════════════════════════════════════
@@ -668,26 +701,39 @@ function showFlash(msg){
 }
 
 /* ═══════════════════════════════════════════
-   AZKAR — window.azkarTap for onclick
+   AZKAR — بناء بـ createElement/textContent، والنقر عبر تفويض أحداث على الحاوية (بلا onclick مضمّن)
 ═══════════════════════════════════════════ */
 function buildAzkar(period){
   var container=period==='morning'?EL.ml:EL.el;if(!container)return;
-  var data=AZKAR[period],prog=azProg[period]||{},html='';
+  var data=AZKAR[period],prog=azProg[period]||{};
+  var frag=document.createDocumentFragment();
   data.forEach(function(z,i){
     var cur=prog[i]||0,done=cur>=z.n;
-    html+='<div class="zi'+(done?' done':'')+'" id="z_'+period+'_'+i+'">';
-    html+='<div class="zi-text">'+z.t.replace(/\n/g,'<br/>')+'</div>';
-    html+='<div class="zi-trans">'+z.tr+'</div><div class="zi-footer">';
-    html+='<span class="zi-badge">'+(z.n===1?'مرة واحدة':toAr(z.n)+' مرات')+'</span>';
+    var card=SafeDOM.h('div',{class:'zi'+(done?' done':''),id:'z_'+period+'_'+i});
+    var txt=SafeDOM.h('div',{class:'zi-text'});
+    z.t.split('\n').forEach(function(line,k){if(k)txt.appendChild(document.createElement('br'));txt.appendChild(document.createTextNode(line));});
+    var footer=SafeDOM.h('div',{class:'zi-footer'});
+    footer.appendChild(SafeDOM.h('span',{class:'zi-badge',text:z.n===1?'مرة واحدة':toAr(z.n)+' مرات'}));
+    var btn=SafeDOM.h('button',{class:'zi-btn',id:'zb_'+period+'_'+i,type:'button',text:done?'✓ تم':(z.n>1?'ذِكر':'تم'),dataset:{period:period,idx:String(i)}});
+    if(done)btn.disabled=true;
     if(z.n>1){
-      html+='<div class="zi-counter"><span class="zi-val" id="zv_'+period+'_'+i+'">'+toAr(cur)+'/'+toAr(z.n)+'</span>';
-      html+='<button class="zi-btn" id="zb_'+period+'_'+i+'" onclick="azkarTap(\''+period+'\','+i+')" '+(done?'disabled':'')+'>'+( done?'✓ تم':'ذِكر')+'</button></div>';
+      footer.appendChild(SafeDOM.h('div',{class:'zi-counter'},[SafeDOM.h('span',{class:'zi-val',id:'zv_'+period+'_'+i,text:toAr(cur)+'/'+toAr(z.n)}),btn]));
     } else {
-      html+='<button class="zi-btn" id="zb_'+period+'_'+i+'" onclick="azkarTap(\''+period+'\','+i+')" '+(done?'disabled':'')+'>'+( done?'✓ تم':'تم')+'</button>';
+      footer.appendChild(btn);
     }
-    html+='</div></div>';
+    card.appendChild(txt);
+    card.appendChild(SafeDOM.h('div',{class:'zi-trans',text:z.tr}));
+    card.appendChild(footer);
+    frag.appendChild(card);
   });
-  container.innerHTML=html;
+  container.replaceChildren(frag);
+  if(!container.dataset.azBound){ /* مستمع واحد لكل حاوية مهما تكرّر البناء */
+    container.dataset.azBound='1';
+    container.addEventListener('click',function(e){
+      var b=e.target.closest('.zi-btn');
+      if(b&&b.dataset.period&&container.contains(b))azkarTap(b.dataset.period,parseInt(b.dataset.idx,10));
+    });
+  }
 }
 function azkarTap(period,idx){
   var z=AZKAR[period][idx];if(!z)return;
@@ -702,7 +748,6 @@ function azkarTap(period,idx){
     setTimeout(function(){var nc=g('z_'+period+'_'+(idx+1));if(nc)nc.scrollIntoView({behavior:'smooth',block:'nearest'});},600);
   }
 }
-window.azkarTap=azkarTap;
 
 /* ═══════════════════════════════════════════
    MISC
@@ -753,6 +798,10 @@ function setupBnav(){
 
   var observerSuspended=false,resumeTimer=null;
   var io=null;
+  /* v5.8: نطاق الرصد يتكيّف مع ارتفاع الشاشة بدل نسب ثابتة (الصيغة المطلوبة؛ على الهواتف المعتادة تعطي القيمة القديمة نفسها
+     -35%/-45% وتضيّق النطاق فقط على الشاشات الطويلة جدًا) */
+  var vh=window.innerHeight||800;
+  var navMargin='-'+Math.min(35,40-(vh/2000)*10).toFixed(1)+'% 0px -'+Math.min(45,50-(vh/2000)*10).toFixed(1)+'% 0px';
   if('IntersectionObserver' in window){
     io=new IntersectionObserver(function(entries){
       if(observerSuspended)return;
@@ -764,7 +813,7 @@ function setupBnav(){
         var match=targets.find(function(t){return t.el===best.target});
         if(match)setActive(match.link);
       }
-    },{rootMargin:'-35% 0px -45% 0px',threshold:[0,0.25,0.5,0.75,1]});
+    },{rootMargin:navMargin,threshold:[0,0.25,0.5,0.75,1]});
     targets.forEach(function(t){io.observe(t.el);});
   }
 
@@ -800,13 +849,27 @@ function exitFocus(){var was=focusOn;focusOn=false;if(EL.fdiv){EL.fdiv.classList
    كانت هذه الروابط (?s=ksa، #azkar، #prayer) لا تُفعّل شيئًا لأن أي كود لم يكن يقرأها،
    وبعضها يشير أصلاً إلى IDs غير موجودة في الصفحة (#azkar/#prayer بدل azCard/prayerSection) —
    فلا يعمل حتى تمرير المتصفح التلقائي للـ hash. */
+/* v5.8: اختيار محطة دون تشغيلها (للروابط العميقة): تحديث الحالة والعناوين وتمييز البطاقة، بلا audio.play().
+   الضغط التالي على زر التشغيل أو «استمع الآن» يستخدم currentSt (انظر togglePlay). */
+function selectStation(st){
+  if(!st)return;
+  currentSt=st;
+  document.querySelectorAll('.st-item').forEach(function(d){d.classList.remove('active','playing');});
+  var targetEl=EL.stList?EL.stList.querySelector('[data-id="'+st.id+'"]'):null;
+  if(targetEl)targetEl.classList.add('active');
+  syncStCurrent();
+  if(EL.npStation)EL.npStation.textContent='إذاعة مختارة — اضغط للتشغيل';
+  if(EL.npTitle)EL.npTitle.textContent=st.name;
+  if(EL.miniTitle)EL.miniTitle.textContent=st.name;
+  updateMediaMeta(st);
+}
 function handleDeepLinks(){
   try{
     var params=new URLSearchParams(location.search);
     var sId=params.get('s');
     if(sId){
       var st=STATIONS.find(function(x){return x.id===sId;});
-      if(st)playStation(st);
+      if(st)selectStation(st); /* v5.8: اختيار فقط، التشغيل عند أول ضغطة (انظر togglePlay) */
     }
     var HASH_ALIASES={azkar:'worshipSection',prayer:'prayerSection',recite:'reciteCard',stations:'stationsCard',tasbih:'worshipSection',tbcard:'tbCard',azcard:'azCard'};
     var rawHash=(location.hash||'').replace('#','');
@@ -835,7 +898,7 @@ function setupMediaSession(){
 }
 function updateMediaMeta(st){
   if(!('mediaSession' in navigator)||!st)return;
-  navigator.mediaSession.metadata=new MediaMetadata({title:st.name,artist:st.cat==='رسمية'?'بث رسمي':'قارئ قرآن',album:'القرآن الكريم مباشر',artwork:[{src:'icon.svg',sizes:'192x192',type:'image/svg+xml'}]});
+  navigator.mediaSession.metadata=new MediaMetadata({title:st.name,artist:st.cat==='رسمية'?'بث رسمي':'قارئ قرآن',album:'القرآن الكريم مباشر',artwork:[{src:'icon-192.png',sizes:'192x192',type:'image/png'},{src:'icon-512.png',sizes:'512x512',type:'image/png'}] /* v5.8: PNG — الـSVG غير مدعوم في إشعارات أغلب الأنظمة فلا يظهر الشعار على شاشة القفل */});
 }
 function checkOnline(){if(!navigator.onLine)setStatus('err','لا يوجد اتصال بالإنترنت',false);}
 
@@ -877,6 +940,7 @@ function bindUI(){
   var debouncedRenderStations=debounce(renderStations,150);
   if(EL.stMore)EL.stMore.addEventListener('click',function(){
     stShowAll=!stShowAll;syncStMore();
+    if(EL.stMore&&!EL.stMore.hidden)EL.stMore.focus({preventScroll:true}); /* يبقى التركيز على الزر (سفاري لا يركّز الأزرار بالنقر) ليتمكن مستخدم لوحة المفاتيح من الطيّ فورًا */
     if(!stShowAll){var sc=g('stationsCard');if(sc)sc.scrollIntoView({block:'nearest',behavior:'smooth'});}
   });
   if(EL.stSearch)EL.stSearch.addEventListener('input',function(e){stSearchQuery=e.target.value;debouncedRenderStations();});

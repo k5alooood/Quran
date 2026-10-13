@@ -6,7 +6,7 @@
 
 [![Live](https://img.shields.io/badge/Live-qurankareem.live-d4af37?style=for-the-badge&logo=googlechrome&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
 [![PWA](https://img.shields.io/badge/PWA-Installable%20%2B%20Offline-7a5a16?style=for-the-badge&logo=pwa&logoColor=white&labelColor=1c1a13)](https://qurankareem.live)
-[![Version](https://img.shields.io/badge/version-5.7.2-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-5.9.1-d4af37?style=for-the-badge&labelColor=1c1a13)](CHANGELOG.md)
 
 ![Vanilla JS](https://img.shields.io/badge/Vanilla-JavaScript-f7df1e?style=flat-square&logo=javascript&logoColor=black)
 ![No framework](https://img.shields.io/badge/Framework-none-1c1a13?style=flat-square)
@@ -51,7 +51,7 @@ It is mobile-first (one-hand use), installable on the home screen, and works off
 ### 🎧 Listening
 | Feature | Details |
 |---|---|
-| **Live radio** | The "Listen now" button plays **the last station you listened to** (or the default). 19 streams: 6 official stations (Quran Radio, Makkah & Madinah Haram, Sharjah, Tafsir, Ruqyah) and 13 reciters; search and filters (All / Favorites / Official / Reciters) |
+| **Live radio** | The "Listen now" button plays **the last station you listened to** (or the default). 41 streams: 9 official stations (Quran Radio Cairo, Saudi Arabia, Makkah & Madinah Haram, Sharjah, Doha x2, Tafsir, Ruqyah) and 13 reciters; search and filters (All / Favorites / Official / Reciters) |
 | **Full recitations** | Pick the narration (Hafs, Warsh, Qalon…), the reciter, then the surah; previous/next and state restore. Data from the [mp3quran.net](https://mp3quran.net) API |
 | **Offline recitations** | Save chosen surahs in the browser cache and play them without internet |
 | **Mini player** | Controls whichever source is active (radio or recitation) with Media Session lock-screen integration |

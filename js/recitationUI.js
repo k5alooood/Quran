@@ -49,8 +49,7 @@ const RecitationUI = (function(){
 
   function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){}}
   function lsJSON(k,v){try{if(v===undefined){var r=localStorage.getItem(k);return r?JSON.parse(r):null;}localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
-  /* v5: تعقيم أي نص مصدره خارجي (أسماء قرّاء/روايات من mp3quran.net API) قبل إدراجه عبر innerHTML */
-  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+  /* v5.8: أسماء القرّاء/الروايات (مصدرها mp3quran.net) تُدرَج دائمًا بـ textContent عبر SafeDOM، فلا حاجة لدالة تهريب */
 
   function toArabicDigits(str){
     var d=['٠','١','٢','٣','٤','٥','٦','٧','٨','٩'];
@@ -95,12 +94,22 @@ const RecitationUI = (function(){
   }
 
   /* ═══ الروايات (Pills) ═══ */
+  var riwayatKey = ''; /* بصمة قائمة الروايات: لا نعيد بناء الأزرار إلا إن تغيّرت القائمة نفسها */
   function renderRiwayatPills(){
     if(!el.pills)return;
-    el.pills.innerHTML = riwayatList.map(function(r){
-      var active = String(r.id)===String(selectedRiwayahId);
-      return '<button type="button" role="tab" aria-selected="'+(active?'true':'false')+'" class="cat-pill'+(active?' cat-pill--active':'')+'" data-id="'+r.id+'">'+esc(r.name)+'</button>';
-    }).join('');
+    var key = riwayatList.map(function(r){return r.id;}).join(',');
+    if(key !== riwayatKey){
+      riwayatKey = key;
+      el.pills.replaceChildren();
+      riwayatList.forEach(function(r){
+        el.pills.appendChild(SafeDOM.h('button',{class:'cat-pill',type:'button',text:r.name,dataset:{id:String(r.id)}}));
+      });
+    }
+    Array.prototype.forEach.call(el.pills.children,function(b){
+      var active = b.dataset.id === String(selectedRiwayahId);
+      b.classList.toggle('cat-pill--active',active);
+      b.setAttribute('aria-pressed',active?'true':'false'); /* أزرار تصفية وليست تبويبات (ARIA APG) */
+    });
   }
 
   function selectRiwayah(id, onLoaded){
@@ -109,14 +118,14 @@ const RecitationUI = (function(){
     selectedMoshaf = null;
     renderRiwayatPills();
     ls('qr_recite_riwayah', id);
-    el.recitersList.innerHTML = skeletonList(6);
+    SafeDOM.setTpl(el.recitersList, skeletonList(6));
     RecitationService.loadReciters(id).then(function(list){
       recitersList = list;
       renderReciters();
       if(typeof onLoaded==='function') onLoaded(list);
     }).catch(function(){
       recitersList = [];
-      el.recitersList.innerHTML = '<div class="pt-error"><p>تعذّر تحميل القرّاء لهذه الرواية</p><button class="pt-retry-btn" id="rcRetryReciters">إعادة المحاولة</button></div>';
+      SafeDOM.setTpl(el.recitersList, '<div class="pt-error"><p>تعذّر تحميل القرّاء لهذه الرواية</p><button class="pt-retry-btn" id="rcRetryReciters">إعادة المحاولة</button></div>');
       var btn = g('rcRetryReciters');
       if(btn) btn.addEventListener('click', function(){selectRiwayah(id, onLoaded);});
     });
@@ -126,7 +135,7 @@ const RecitationUI = (function(){
   function renderReciters(){
     if(!sectionRevealed){
       pendingRenders.push(renderReciters);
-      if(el.recitersList) el.recitersList.innerHTML = skeletonList(6);
+      if(el.recitersList) SafeDOM.setTpl(el.recitersList, skeletonList(6));
       return;
     }
     var list = recitersList;
@@ -135,7 +144,7 @@ const RecitationUI = (function(){
       list = list.filter(function(r){return r.name.indexOf(q)!==-1;});
     }
     if(!list.length){
-      el.recitersList.innerHTML = '<p class="no-results">لا يوجد قرّاء مطابقون</p>';
+      el.recitersList.replaceChildren(SafeDOM.h('p',{class:'no-results',text:'لا يوجد قرّاء مطابقون'}));
       if(recSearchQ && el.recSearch){
         var clr=document.createElement('button');clr.type='button';clr.className='cat-pill';clr.textContent='مسح البحث';
         clr.addEventListener('click',function(){el.recSearch.value='';recSearchQ='';renderReciters();el.recSearch.focus();});
@@ -143,18 +152,15 @@ const RecitationUI = (function(){
       }
       return;
     }
-    el.recitersList.innerHTML = '';
+    el.recitersList.replaceChildren();
     list.forEach(function(r,idx){
       var div=document.createElement('div');
       div.className='st-item';
       div.setAttribute('role','listitem');
       div.style.animationDelay=(idx*25)+'ms';
-      var initial = esc(String(r.name||'ق').trim().charAt(0));
-      div.innerHTML =
-        '<div class="st-icon st-icon--avatar" aria-hidden="true">'+
-          '<span class="rc-initial">'+initial+'</span>'+
-        '</div>'+
-        '<div class="st-info"><div class="st-name">'+esc(r.name)+'</div></div>';
+      var initial = String(r.name||'ق').trim().charAt(0);
+      div.appendChild(SafeDOM.h('div',{class:'st-icon st-icon--avatar',attrs:{'aria-hidden':'true'}},[SafeDOM.h('span',{class:'rc-initial',text:initial})]));
+      div.appendChild(SafeDOM.h('div',{class:'st-info'},[SafeDOM.h('div',{class:'st-name',text:r.name})]));
       var hitR=document.createElement('button');hitR.type='button';hitR.className='st-hit';
       hitR.setAttribute('aria-label','عرض سور '+String(r.name||''));
       div.insertBefore(hitR,div.firstChild);
@@ -195,20 +201,19 @@ const RecitationUI = (function(){
       ids = ids.filter(function(n){return RecitationService.surahName(n).indexOf(q)!==-1;});
     }
     if(!ids.length){
-      el.surahsList.innerHTML = '<p class="no-results">لا توجد سور مطابقة</p>';
+      el.surahsList.replaceChildren(SafeDOM.h('p',{class:'no-results',text:'لا توجد سور مطابقة'}));
       return;
     }
-    el.surahsList.innerHTML = '';
+    el.surahsList.replaceChildren();
     ids.forEach(function(num,idx){
       var isActive = selectedReciter && currentSurahNum===num;
       var div=document.createElement('div');
       div.className='st-item'+(isActive?' active':'')+(isActive&&isPlaying()?' playing':'');
       div.setAttribute('role','listitem');
       div.style.animationDelay=(Math.min(idx,20)*20)+'ms';
-      div.innerHTML =
-        '<div class="st-icon" aria-hidden="true">'+toArabicDigits(num)+'</div>'+
-        '<div class="st-info"><div class="st-name">سورة '+RecitationService.surahName(num)+'</div></div>'+
-        '<div class="st-eq"><span></span><span></span><span></span></div>';
+      div.appendChild(SafeDOM.h('div',{class:'st-icon',attrs:{'aria-hidden':'true'},text:toArabicDigits(num)}));
+      div.appendChild(SafeDOM.h('div',{class:'st-info'},[SafeDOM.h('div',{class:'st-name',text:'سورة '+RecitationService.surahName(num)})]));
+      div.appendChild(SafeDOM.tpl('<div class="st-eq"><span></span><span></span><span></span></div>'));
       var hitS=document.createElement('button');hitS.type='button';hitS.className='st-hit';
       hitS.setAttribute('aria-label','تشغيل سورة '+RecitationService.surahName(num));
       if(isActive)hitS.setAttribute('aria-current','true');
@@ -239,19 +244,27 @@ const RecitationUI = (function(){
      التشغيل يستخدم الرابط الأصلي مباشرة بدل أي تحويل. */
   var OFFLINE_CACHE = 'quran-offline-audio-v1';
   function offlineSupported(){ return typeof caches!=='undefined'; }
+  /* v5.8: Promise واحد مشترك لفتح الكاش بدل caches.open(...) في كل استدعاء (يُعاد فتحه إن فشل مرة) */
+  var offlineCachePromise = null;
+  function getOfflineCache(){
+    if(!offlineCachePromise){
+      offlineCachePromise = caches.open(OFFLINE_CACHE).catch(function(e){ offlineCachePromise = null; throw e; });
+    }
+    return offlineCachePromise;
+  }
   function isSavedOffline(url){
     if(!offlineSupported()) return Promise.resolve(false);
-    return caches.open(OFFLINE_CACHE).then(function(c){return c.match(url);}).then(function(m){return !!m;}).catch(function(){return false;});
+    return getOfflineCache().then(function(c){return c.match(url);}).then(function(m){return !!m;}).catch(function(){return false;});
   }
   function saveOffline(url){
     if(!offlineSupported()) return Promise.resolve(false);
-    return caches.open(OFFLINE_CACHE).then(function(c){
+    return getOfflineCache().then(function(c){
       return fetch(url, {mode:'no-cors'}).then(function(resp){return c.put(url, resp);});
     }).then(function(){return true;}).catch(function(){return false;});
   }
   function removeOffline(url){
     if(!offlineSupported()) return Promise.resolve(false);
-    return caches.open(OFFLINE_CACHE).then(function(c){return c.delete(url);}).catch(function(){return false;});
+    return getOfflineCache().then(function(c){return c.delete(url);}).catch(function(){return false;});
   }
   function updateOfflineBtnUI(url){
     if(!el.offlineBtn) return;
@@ -592,7 +605,7 @@ const RecitationUI = (function(){
     setVol(startVol);
     updateVolIcon();
 
-    el.recitersList.innerHTML = skeletonList(6);
+    SafeDOM.setTpl(el.recitersList, skeletonList(6));
     RecitationService.loadRiwayat().then(function(list){
       riwayatList = list;
       var savedState = restoreRepeatMode(); /* بلا شبكة — يستعيد وضع التكرار فقط الآن */
@@ -612,7 +625,7 @@ const RecitationUI = (function(){
         restoreState(); /* مسار احتياطي فقط إن لم توجد رواية افتراضية على الإطلاق */
       }
     }).catch(function(){
-      el.recitersList.innerHTML = '<div class="pt-error"><p>تعذّر تحميل قائمة الروايات، تحقق من الاتصال</p><button class="pt-retry-btn" id="rcRetryRiwayat">إعادة المحاولة</button></div>';
+      SafeDOM.setTpl(el.recitersList, '<div class="pt-error"><p>تعذّر تحميل قائمة الروايات، تحقق من الاتصال</p><button class="pt-retry-btn" id="rcRetryRiwayat">إعادة المحاولة</button></div>');
       var btn = g('rcRetryRiwayat');
       if(btn) btn.addEventListener('click', init);
     });
